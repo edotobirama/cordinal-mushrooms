@@ -47,7 +47,13 @@ export async function saveDatabase() {
         // @ts-ignore
         const file = databaseVFS.mapNameToFile.get("cordinal.sqlite");
         if (file && file.data) {
-            await saveDB(file.data);
+            // MemoryVFS may over-allocate (2x growth). We must save only
+            // the actual data (file.size bytes) as a clean ArrayBuffer,
+            // so that restoration works correctly with MemoryVFS.xRead
+            // which does: new Uint8Array(file.data, offset, length)
+            const cleanData = new ArrayBuffer(file.size);
+            new Uint8Array(cleanData).set(new Uint8Array(file.data, 0, file.size));
+            await saveDB(cleanData);
             console.log("Database saved to IDB");
         }
     }
@@ -66,8 +72,22 @@ export async function initDB() {
         sqlite3.vfs_register(vfs, true);
 
         // Load existing data
-        const existingData = await loadDB();
-        if (existingData) {
+        const existingRaw = await loadDB();
+        if (existingRaw) {
+            // Ensure data is a proper ArrayBuffer (IndexedDB may return
+            // Uint8Array, ArrayBuffer, or other buffer views depending on browser)
+            let existingData: ArrayBuffer;
+            if (existingRaw instanceof ArrayBuffer) {
+                existingData = existingRaw;
+            } else if (ArrayBuffer.isView(existingRaw)) {
+                // It's a typed array view (Uint8Array etc) — extract the underlying buffer
+                // We must copy to a new ArrayBuffer to avoid offset issues
+                const view = existingRaw as unknown as Uint8Array;
+                existingData = new ArrayBuffer(view.byteLength);
+                new Uint8Array(existingData).set(new Uint8Array(view.buffer, view.byteOffset, view.byteLength));
+            } else {
+                existingData = existingRaw as ArrayBuffer;
+            }
             console.log("Restoring database from persistence...", existingData.byteLength);
             // @ts-ignore
             vfs.mapNameToFile.set("cordinal.sqlite", {
