@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useFacility } from "@/hooks/use-facility";
+import { cn } from "@/lib/utils";
 import { AddRackDialog } from "@/components/facility/add-rack-dialog";
 import {
     Card,
@@ -18,7 +20,8 @@ import { RoomSettingsDialog } from "@/components/facility/room-settings-dialog";
 import { FacilityProvider, useFacilityData } from "@/components/providers/facility-provider";
 
 function FacilityContent() {
-    const { racks: allRacks, settings, isLoading } = useFacilityData();
+    const { racks: allRacks, settings, isLoading, refresh } = useFacilityData();
+    const { updateRackLightStatus } = useFacility();
 
     if (isLoading) {
         return (
@@ -67,9 +70,20 @@ function FacilityContent() {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2 mt-2">
-                                        {rack.lightType === 'Blue' && <div className="h-3 w-3 rounded-full bg-blue-500" />}
-                                        {rack.lightType === 'Pink' && <div className="h-3 w-3 rounded-full bg-pink-500" />}
-                                        {rack.lightType === 'White' && <div className="h-3 w-3 rounded-full bg-slate-200 border" />}
+                                        <button
+                                            onClick={async () => {
+                                                await updateRackLightStatus(rack.id, !rack.lightStatus);
+                                                refresh(false);
+                                            }}
+                                            className={cn("px-2.5 py-0.5 text-xs font-semibold rounded-full border transition-colors cursor-pointer hover:opacity-80",
+                                                rack.lightStatus ? "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800"
+                                                    : "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700")}
+                                        >
+                                            {rack.lightStatus ? "Light ON" : "Light OFF"}
+                                        </button>
+                                        {rack.lightType === 'Blue' && <div className="h-3 w-3 rounded-full bg-blue-500" title="Blue Light" />}
+                                        {rack.lightType === 'Pink' && <div className="h-3 w-3 rounded-full bg-pink-500" title="Pink Light" />}
+                                        {rack.lightType === 'White' && <div className="h-3 w-3 rounded-full bg-slate-200 border" title="White Light" />}
                                         <Badge className={rack.status === 'Active' ? 'bg-primary' : 'bg-destructive'}>
                                             {rack.status}
                                         </Badge>

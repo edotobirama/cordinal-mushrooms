@@ -22,6 +22,7 @@ export const racks = sqliteTable("racks", {
     currentUsage: integer("current_usage").notNull().default(0),
     lightType: text("light_type").notNull().default("White"), // 'Blue', 'Pink', 'White'
     lightIntensity: integer("light_intensity").notNull().default(800), // Lux
+    lightStatus: integer("light_status", { mode: "boolean" }).notNull().default(false),
     status: text("status").notNull().default("Active"), // 'Active', 'Maintenance'
     x: integer("x").notNull().default(0),
     y: integer("y").notNull().default(0),

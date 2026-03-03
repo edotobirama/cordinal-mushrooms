@@ -48,6 +48,12 @@ export async function updateRackService(db: any, params: {
         .where(eq(schema.racks.id, params.id));
 }
 
+export async function updateRackLightStatusService(db: any, id: number, lightStatus: boolean) {
+    await db.update(schema.racks)
+        .set({ lightStatus })
+        .where(eq(schema.racks.id, id));
+}
+
 export async function updateRackPositionsService(db: any, positions: { id: number; x: number; y: number }[]) {
     for (const pos of positions) {
         await db.update(schema.racks)

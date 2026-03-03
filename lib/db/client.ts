@@ -205,7 +205,7 @@ async function ensureSchema(sqlite3: any, dbPtr: number) {
     console.log("Ensuring Schema...");
     const ddl = `
         CREATE TABLE IF NOT EXISTS materials (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, quantity INTEGER NOT NULL DEFAULT 0, unit TEXT NOT NULL, low_stock_threshold INTEGER NOT NULL DEFAULT 10, created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP), updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP));
-        CREATE TABLE IF NOT EXISTS racks (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, capacity INTEGER NOT NULL, current_usage INTEGER NOT NULL DEFAULT 0, light_type TEXT NOT NULL DEFAULT 'White', light_intensity INTEGER NOT NULL DEFAULT 800, status TEXT NOT NULL DEFAULT 'Active', x INTEGER NOT NULL DEFAULT 0, y INTEGER NOT NULL DEFAULT 0, width REAL NOT NULL DEFAULT 2, height REAL NOT NULL DEFAULT 1, rotation INTEGER NOT NULL DEFAULT 0, material TEXT NOT NULL DEFAULT 'Steel', total_layers INTEGER NOT NULL DEFAULT 7);
+        CREATE TABLE IF NOT EXISTS racks (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, capacity INTEGER NOT NULL, current_usage INTEGER NOT NULL DEFAULT 0, light_type TEXT NOT NULL DEFAULT 'White', light_intensity INTEGER NOT NULL DEFAULT 800, light_status INTEGER NOT NULL DEFAULT 0, status TEXT NOT NULL DEFAULT 'Active', x INTEGER NOT NULL DEFAULT 0, y INTEGER NOT NULL DEFAULT 0, width REAL NOT NULL DEFAULT 2, height REAL NOT NULL DEFAULT 1, rotation INTEGER NOT NULL DEFAULT 0, material TEXT NOT NULL DEFAULT 'Steel', total_layers INTEGER NOT NULL DEFAULT 7);
         CREATE TABLE IF NOT EXISTS batches (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, source_id TEXT NOT NULL, start_date TEXT NOT NULL, rack_id INTEGER NOT NULL REFERENCES racks(id), layer INTEGER NOT NULL DEFAULT 1, type TEXT NOT NULL DEFAULT 'Liquid Culture', jar_count INTEGER NOT NULL, stage TEXT NOT NULL DEFAULT 'Incubation', estimated_ready_date TEXT, status TEXT NOT NULL DEFAULT 'Active', created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP), updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP));
         CREATE TABLE IF NOT EXISTS facility_settings (id INTEGER PRIMARY KEY AUTOINCREMENT, room_width REAL NOT NULL DEFAULT 20, room_height REAL NOT NULL DEFAULT 15, shake_morning_time TEXT NOT NULL DEFAULT '09:00', shake_evening_time TEXT NOT NULL DEFAULT '21:00', updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP));
         CREATE TABLE IF NOT EXISTS rack_layers (id INTEGER PRIMARY KEY AUTOINCREMENT, rack_id INTEGER NOT NULL REFERENCES racks(id) ON DELETE CASCADE, layer INTEGER NOT NULL, color TEXT NOT NULL DEFAULT 'White', updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP));
@@ -218,4 +218,15 @@ async function ensureSchema(sqlite3: any, dbPtr: number) {
     `;
 
     await sqlite3.exec(dbPtr, ddl);
+
+    // Run migrations that might fail if the column already exists
+    try {
+        await sqlite3.exec(dbPtr, `ALTER TABLE racks ADD COLUMN light_status INTEGER NOT NULL DEFAULT 0;`);
+        console.log("Added light_status column to racks table");
+    } catch (e: any) {
+        // Ignore duplicate column error, it means we already migrated
+        if (!e.message?.includes("duplicate column name")) {
+            console.error("Migration error:", e);
+        }
+    }
 }

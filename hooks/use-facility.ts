@@ -14,7 +14,8 @@ import {
     updateLayerColorService,
     updateRackLayerCountService,
     getRackDetailsService,
-    repairRackUsageService
+    repairRackUsageService,
+    updateRackLightStatusService
 } from "@/lib/services/facility";
 
 export function useFacility() {
@@ -58,6 +59,12 @@ export function useFacility() {
     const updateRackPositions = useCallback(async (positions: { id: number; x: number; y: number }[]) => {
         if (!db) return;
         await updateRackPositionsService(db, positions);
+        await saveDatabase();
+    }, [db]);
+
+    const updateRackLightStatus = useCallback(async (id: number, lightStatus: boolean) => {
+        if (!db) return;
+        await updateRackLightStatusService(db, id, lightStatus);
         await saveDatabase();
     }, [db]);
 
@@ -137,7 +144,7 @@ export function useFacility() {
         moveBatchItems, getAllRacks,
         getFacilitySettings, updateFacilitySettings,
         updateLayerColor, updateRackLayerCount, getRackDetails,
-        updateRackPositions,
+        updateRackPositions, updateRackLightStatus,
         repairRackUsage
     };
 }

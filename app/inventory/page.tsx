@@ -15,16 +15,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { desc, eq, sql, not, inArray } from "drizzle-orm";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Activity, Package, Loader2 } from "lucide-react";
+import { Activity, Package, Loader2, Search } from "lucide-react";
 import { AddItemDialog } from "@/components/inventory/add-item-dialog";
 import { InventoryActions } from "@/components/inventory/inventory-actions";
 import { useEffect, useState } from "react";
+import { Input } from "@/components/ui/input";
 
 export default function InventoryPage() {
     const { db } = useDb();
     const [loading, setLoading] = useState(true);
     const [fruitingBatches, setFruitingBatches] = useState<any[]>([]);
     const [storedItems, setStoredItems] = useState<any[]>([]);
+    const [searchQuery, setSearchQuery] = useState("");
     const [stats, setStats] = useState({
         incubation: { lc: 0, agar: 0, spawn: 0 },
         storage: { lc: 0, agar: 0, fruit: 0, spawn: 0 },
@@ -82,6 +84,15 @@ export default function InventoryPage() {
     useEffect(() => {
         refreshData();
     }, [db]);
+
+    const filteredStoredItems = storedItems.filter((item) => {
+        const query = searchQuery.toLowerCase();
+        return (
+            (item.name && item.name.toLowerCase().includes(query)) ||
+            (item.batchId && String(item.batchId).toLowerCase().includes(query)) ||
+            (item.type && item.type.toLowerCase().includes(query))
+        );
+    });
 
     if (!db || loading) {
         return (
@@ -193,6 +204,18 @@ export default function InventoryPage() {
                 </TabsContent>
 
                 <TabsContent value="stored" className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                        <div className="relative flex-1 max-w-sm">
+                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                type="search"
+                                placeholder="Search inventory..."
+                                className="pl-8"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
+                    </div>
                     <div className="border rounded-md">
                         <Table>
                             <TableHeader>
@@ -207,7 +230,7 @@ export default function InventoryPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {storedItems.map((item) => (
+                                {filteredStoredItems.map((item) => (
                                     <TableRow key={item.id}>
                                         <TableCell>{item.batchId || "-"}</TableCell>
                                         <TableCell className="font-medium">{item.name}</TableCell>
@@ -225,10 +248,10 @@ export default function InventoryPage() {
                                         </TableCell>
                                     </TableRow>
                                 ))}
-                                {storedItems.length === 0 && (
+                                {filteredStoredItems.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
-                                            No items in storage. Harvest batches to add stock.
+                                        <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">
+                                            {searchQuery ? "No matching items found." : "No items in storage. Harvest batches to add stock."}
                                         </TableCell>
                                     </TableRow>
                                 )}

@@ -4,7 +4,8 @@ import {
     getStatsService,
     getActionsService,
     getRecentActivityService,
-    getPendingActionCountsService
+    getPendingActionCountsService,
+    getDashboardGridStatsService
 } from "@/lib/services/dashboard";
 
 export function useDashboard() {
@@ -30,5 +31,10 @@ export function useDashboard() {
         return await getPendingActionCountsService(db);
     }, [db]);
 
-    return { getStats, getActions, getRecentActivity, getPendingActionCounts };
+    const getDashboardGridStats = useCallback(async () => {
+        if (!db) return null;
+        return await getDashboardGridStatsService(db);
+    }, [db]);
+
+    return { getStats, getActions, getRecentActivity, getPendingActionCounts, getDashboardGridStats };
 }
