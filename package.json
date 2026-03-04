@@ -39,6 +39,7 @@
     "wa-sqlite": "^1.0.0"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20.19.33",
     "@types/react": "^19.2.13",
