@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState, useEffect } from "react";
 import { useProduction } from "@/hooks/use-production";
 import { useInventory } from "@/hooks/use-inventory";
-import { Loader2, Beaker, Calendar, scale, Hash, Archive, Info } from "lucide-react";
+import { Loader2, Beaker, Calendar, Hash, Archive, Info } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { format, subDays, differenceInCalendarDays, parseISO } from "date-fns";
 
@@ -52,7 +52,7 @@ export function AddBatchDialog({ open, onOpenChange, rackId, layer, onSuccess }:
     useEffect(() => {
         let requiredType = "";
         if (selectedType === "Liquid Culture") requiredType = "Base Culture"; // LC needs Agar
-        else if (selectedType === "Basal Medium") requiredType = "Liquid-Culture"; // Spawn needs LC
+        else if (selectedType === "Jars") requiredType = "Liquid-Culture"; // Jars need LC
 
         if (requiredType) {
             getInventoryItemsByType(requiredType).then(items => {
@@ -118,7 +118,7 @@ export function AddBatchDialog({ open, onOpenChange, rackId, layer, onSuccess }:
                                     <SelectContent>
                                         <SelectItem value="Liquid Culture">Liquid Culture (LC)</SelectItem>
                                         <SelectItem value="Base Culture">Base Culture (Agar)</SelectItem>
-                                        <SelectItem value="Spawn">Spawn (Grain)</SelectItem>
+                                        <SelectItem value="Jars">Jars</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </CardContent>

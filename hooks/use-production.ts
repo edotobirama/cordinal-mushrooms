@@ -21,6 +21,7 @@ export function useProduction() {
             return formData[key];
         }
 
+        const name = get("name") as string;
         const type = get("type") as string;
         const sourceId = get("sourceId") as string;
         const startDate = get("startDate") as string;
@@ -30,7 +31,7 @@ export function useProduction() {
         const providedLayer = Number(get("layer"));
 
         const res = await startBatchService(db, {
-            type, sourceId, startDate, rackId, jarCount, locationsStr, providedLayer
+            name, type, sourceId, startDate, rackId, jarCount, locationsStr, providedLayer
         });
 
         await saveDatabase();

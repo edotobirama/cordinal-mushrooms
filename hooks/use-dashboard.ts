@@ -12,7 +12,7 @@ export function useDashboard() {
     const { db } = useDb();
 
     const getStats = useCallback(async () => {
-        if (!db) return { incubation: { spawn: 0, lc: 0, agar: 0 }, storage: { lc: 0, agar: 0, spawn: 0 }, totalCapacity: 0 };
+        if (!db) return { incubation: { jars: 0, lc: 0, agar: 0 }, storage: { lc: 0, agar: 0, jars: 0 }, totalCapacity: 0 };
         return await getStatsService(db);
     }, [db]);
 

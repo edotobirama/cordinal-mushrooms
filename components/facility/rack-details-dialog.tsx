@@ -16,6 +16,7 @@ interface RackDetailsDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     rackId: number | null;
+    activeFilter?: string | null;
 }
 
 interface Batch {
@@ -43,11 +44,11 @@ interface RackDetails {
 
 import { useFacilityData } from "@/components/providers/facility-provider";
 
-export function RackDetailsDialog({ open, onOpenChange, rackId }: RackDetailsDialogProps) {
+export function RackDetailsDialog({ open, onOpenChange, rackId, activeFilter }: RackDetailsDialogProps) {
     const [rack, setRack] = useState<RackDetails | null>(null);
     const [selectedLayer, setSelectedLayer] = useState<number | null>(null);
     const { getRackDetails, updateLayerColor, updateRackLayerCount } = useFacility();
-    const { refresh } = useFacilityData();
+    const { actionMap, refresh } = useFacilityData();
 
     const refreshRack = () => {
         if (rackId) {
@@ -135,36 +136,56 @@ export function RackDetailsDialog({ open, onOpenChange, rackId }: RackDetailsDia
                                 const isBC = types.includes("Base Culture");
                                 const isJars = types.some(t => !["Liquid Culture", "Base Culture"].includes(t));
 
-                                // Find layer color (Custom overrides)
                                 const layerData = rack.layers?.find(l => l.layer === layerNum);
                                 const layerColor = layerData?.color || "White"; // Default
 
+                                const layerActions = rack ? actionMap?.[rack.id]?.[layerNum] || {} : {};
+                                let hasLayerFilter = !!(activeFilter && layerActions[activeFilter] && layerActions[activeFilter].length > 0);
+                                let hasAnyAction = Object.keys(layerActions).length > 0;
+
+                                const isNeutral = !!activeFilter && !hasLayerFilter;
+
                                 let glowClass = "";
-                                if (layerColor === 'Blue') glowClass = "shadow-[inset_0_0_20px_rgba(59,130,246,0.3)] border-blue-300";
-                                if (layerColor === 'Pink') glowClass = "shadow-[inset_0_0_20px_rgba(236,72,153,0.3)] border-pink-300";
-                                if (layerColor === 'White') glowClass = "shadow-[inset_0_0_20px_rgba(255,255,255,0.3)] border-stone-300";
+                                if (hasLayerFilter && activeFilter) {
+                                    if (activeFilter === 'red') glowClass = "shadow-[inset_0_0_20px_rgba(239,68,68,0.5)] border-red-500 bg-red-50/80 dark:bg-red-900/40 z-10 scale-[1.01]";
+                                    else if (activeFilter === 'purple') glowClass = "shadow-[inset_0_0_20px_rgba(168,85,247,0.5)] border-purple-500 bg-purple-50/80 dark:bg-purple-900/40 z-10 scale-[1.01]";
+                                    else if (activeFilter === 'green') glowClass = "shadow-[inset_0_0_20px_rgba(16,185,129,0.5)] border-emerald-500 bg-emerald-50/80 dark:bg-emerald-900/40 z-10 scale-[1.01]";
+                                    else if (activeFilter === 'yellow') glowClass = "shadow-[inset_0_0_20px_rgba(245,158,11,0.5)] border-amber-500 bg-amber-50/80 dark:bg-amber-900/40 z-10 scale-[1.01]";
+                                    else if (activeFilter === 'blue') glowClass = "shadow-[inset_0_0_20px_rgba(59,130,246,0.5)] border-blue-500 bg-blue-50/80 dark:bg-blue-900/40 z-10 scale-[1.01]";
+                                } else if (!isNeutral) {
+                                    if (layerColor === 'Blue') glowClass = "shadow-[inset_0_0_20px_rgba(59,130,246,0.3)] border-blue-300";
+                                    else if (layerColor === 'Pink') glowClass = "shadow-[inset_0_0_20px_rgba(236,72,153,0.3)] border-pink-300";
+                                    else if (layerColor === 'White') glowClass = "shadow-[inset_0_0_20px_rgba(255,255,255,0.3)] border-stone-300";
+                                }
 
                                 // Content-based Styling overrides (if active batches exist)
-                                let bgClass = hasBatches ? "bg-emerald-100/50 dark:bg-emerald-900/20" : "bg-transparent";
+                                let bgClass = "bg-transparent";
                                 let textClass = "text-emerald-600 dark:text-emerald-400";
                                 let countLabel = "Jars";
 
                                 if (hasBatches) {
                                     if (isLC && !isJars && !isBC) {
-                                        bgClass = "bg-cyan-100/50 dark:bg-cyan-900/20";
-                                        glowClass = "border-cyan-300"; // Override border
                                         textClass = "text-cyan-600 dark:text-cyan-400";
                                         countLabel = "LC";
+                                        if (!isNeutral && !hasLayerFilter) {
+                                            bgClass = "bg-cyan-100/50 dark:bg-cyan-900/20";
+                                            glowClass = "border-cyan-300"; // Override border
+                                        }
                                     } else if (isBC && !isJars && !isLC) {
-                                        bgClass = "bg-rose-100/50 dark:bg-rose-900/20";
-                                        glowClass = "border-rose-300";
                                         textClass = "text-rose-600 dark:text-rose-400";
                                         countLabel = "Plates";
-                                    } else if (types.length > 1) {
-                                        // Mixed
-                                        bgClass = "bg-slate-100/50 dark:bg-slate-900/20";
-                                        textClass = "text-slate-600 dark:text-slate-400";
-                                        countLabel = "Items";
+                                        if (!isNeutral && !hasLayerFilter) {
+                                            bgClass = "bg-rose-100/50 dark:bg-rose-900/20";
+                                            glowClass = "border-rose-300";
+                                        }
+                                    } else {
+                                        if (types.length > 1) {
+                                            textClass = "text-slate-600 dark:text-slate-400";
+                                            countLabel = "Items";
+                                        }
+                                        if (!isNeutral && !hasLayerFilter) {
+                                            bgClass = "bg-emerald-100/50 dark:bg-emerald-900/20";
+                                        }
                                     }
                                 }
 
@@ -175,14 +196,23 @@ export function RackDetailsDialog({ open, onOpenChange, rackId }: RackDetailsDia
                                         className={cn(
                                             "w-full h-12 border-b-4 flex items-center justify-between px-4 transition-all relative group",
                                             bgClass,
-                                            glowClass || (layerColor === 'Off' ? "border-stone-800 bg-black/5" : "border-stone-300")
+                                            glowClass || (layerColor === 'Off' ? "border-stone-800 bg-black/5" : "border-stone-300"),
+                                            hasLayerFilter && "ring-2 ring-primary border-transparent",
+                                            isNeutral && "opacity-50 grayscale transition-opacity"
                                         )}
                                     >
                                         <div
                                             className="flex-1 h-full flex items-center cursor-pointer"
                                             onClick={() => setSelectedLayer(layerNum)}
                                         >
-                                            <span className="font-mono text-sm text-stone-500 mr-4">L-{layerNum}</span>
+                                            {hasAnyAction && (
+                                                <div className={cn("absolute -left-3 shadow border rounded-full text-xs font-bold w-6 h-6 flex items-center justify-center text-white",
+                                                    hasLayerFilter ? "bg-primary animate-bounce ring-2 ring-white" : "bg-orange-500"
+                                                )}>
+                                                    A
+                                                </div>
+                                            )}
+                                            <span className="font-mono text-sm text-stone-500 mr-4 pl-4">L-{layerNum}</span>
                                             {hasBatches ? (
                                                 <div className="flex gap-2 text-xs">
                                                     <span className={cn("font-bold", textClass)}>{jarCount} {countLabel}</span>
@@ -250,6 +280,7 @@ export function RackDetailsDialog({ open, onOpenChange, rackId }: RackDetailsDia
                 layerNumber={selectedLayer}
                 rack={rack}
                 onUpdate={refreshRack}
+                activeFilter={activeFilter}
             />
         </>
     );

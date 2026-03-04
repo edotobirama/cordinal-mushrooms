@@ -4,6 +4,7 @@ import { addDays, format } from "date-fns";
 import { INCUBATION_PERIODS } from "@/lib/constants";
 
 export async function startBatchService(db: any, params: {
+    name?: string;
     type: string;
     sourceId: string;
     startDate: string;
@@ -12,7 +13,7 @@ export async function startBatchService(db: any, params: {
     locationsStr: string;
     providedLayer: number;
 }) {
-    let { type, sourceId, startDate, rackId, jarCount, locationsStr, providedLayer } = params;
+    let { name: providedName, type, sourceId, startDate, rackId, jarCount, locationsStr, providedLayer } = params;
 
     if (!sourceId || sourceId === "undefined" || sourceId === "null") {
         sourceId = "New Source";
@@ -29,7 +30,7 @@ export async function startBatchService(db: any, params: {
     const typeAbbr = type === "Liquid Culture" ? "LC" : type === "Base Culture" ? "BC" : "Jar";
     const dateStr = format(new Date(startDate), "yyMMdd");
     const sourceName = sourceItem ? sourceItem.name : (sourceId === "New Source" || sourceId === "External" ? "Master" : sourceId);
-    const name = `${sourceName}-${typeAbbr}-${dateStr}`;
+    const name = providedName || `${sourceName}-${typeAbbr}-${dateStr}`;
 
     const isCultureBatch = ["Liquid Culture", "Base Culture", "Basal Medium"].includes(type);
     let targetLayer = providedLayer || 1;
@@ -113,8 +114,8 @@ export async function harvestBatchService(db: any, batchId: number) {
     let unit = "jars";
     if (batch.type === "Liquid Culture") inventoryType = "Liquid-Culture";
     else if (batch.type === "Base Culture") inventoryType = "Base Culture";
-    else if (batch.type === "Spawn" || batch.type === "Grain" || batch.type === "Basal Medium") {
-        inventoryType = "Spawn";
+    else if (batch.type === "Jars" || batch.type === "Spawn" || batch.type === "Grain" || batch.type === "Basal Medium") {
+        inventoryType = "Jars";
         unit = "jars";
     } else {
         inventoryType = "Dried-Sealed";

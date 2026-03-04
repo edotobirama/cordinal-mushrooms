@@ -1,13 +1,14 @@
 import * as schema from "@/lib/db/schema";
 import { eq, sql, and } from "drizzle-orm";
 
-export async function addToInventoryService(db: any, params: { name: string; type: string; quantity: number; unit: string; notes: string }) {
-    const { name, type, quantity, unit, notes } = params;
+export async function addToInventoryService(db: any, params: { name: string; type: string; quantity: number; unit: string; isPreserved: boolean; notes: string }) {
+    const { name, type, quantity, unit, isPreserved, notes } = params;
 
     const existingRes = await db.select().from(schema.inventoryItems).where(
         and(
             eq(schema.inventoryItems.name, name),
-            eq(schema.inventoryItems.type, type)
+            eq(schema.inventoryItems.type, type),
+            eq(schema.inventoryItems.isPreserved, isPreserved)
         )
     ).limit(1);
     const existing = existingRes[0];
@@ -22,6 +23,7 @@ export async function addToInventoryService(db: any, params: { name: string; typ
             type,
             quantity,
             unit,
+            isPreserved,
             notes
         });
     }
@@ -78,4 +80,25 @@ export async function getInventoryItemsByTypeService(db: any, type: string) {
     return await db.select()
         .from(schema.inventoryItems)
         .where(eq(schema.inventoryItems.type, type));
+}
+
+export async function convertJarToDriedService(db: any, id: number) {
+    const jarRes = await db.select().from(schema.inventoryItems).where(eq(schema.inventoryItems.id, id)).limit(1);
+    const jar = jarRes[0];
+    if (!jar || jar.type !== "Jars" || jar.quantity <= 0) return;
+
+    // Decrement Jar
+    await db.update(schema.inventoryItems)
+        .set({ quantity: jar.quantity - 1 })
+        .where(eq(schema.inventoryItems.id, id));
+
+    // Add Dried
+    await addToInventoryService(db, {
+        name: jar.name,
+        type: "Dried",
+        quantity: 1,
+        unit: "grams",
+        isPreserved: false,
+        notes: `Harvested from Jar`
+    });
 }

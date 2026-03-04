@@ -30,7 +30,7 @@ interface Rack {
 
 const GRID_SIZE = 40; // Size of grid squares in pixels
 
-function DraggableRack({ rack, style, mode, onSelect }: { rack: Rack, style?: React.CSSProperties, mode: 'edit' | 'access', onSelect: () => void }) {
+function DraggableRack({ rack, style, mode, onSelect, activeFilter }: { rack: Rack, style?: React.CSSProperties, mode: 'edit' | 'access', onSelect: () => void, activeFilter: string | null }) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: Number(rack.id),
         data: { x: Number(rack.x), y: Number(rack.y), width: Number(rack.width), height: Number(rack.height) },
@@ -57,6 +57,30 @@ function DraggableRack({ rack, style, mode, onSelect }: { rack: Rack, style?: Re
     if (rack.lightType === 'Pink') lightColorClass = "bg-pink-500 shadow-[0_0_10px_rgba(236,72,153,0.5)]";
     if (rack.lightType === 'White') lightColorClass = "bg-yellow-100 shadow-[0_0_10px_rgba(253,224,71,0.5)] border-yellow-200";
 
+    const { actionMap } = useFacilityData();
+    const rackActions = actionMap?.[rack.id] || {};
+
+    let hasActiveFilter = false;
+    let hasAnyAction = false;
+
+    Object.values(rackActions).forEach(layerActions => {
+        if (activeFilter && layerActions[activeFilter] && layerActions[activeFilter].length > 0) {
+            hasActiveFilter = true;
+        }
+        if (Object.keys(layerActions).length > 0) {
+            hasAnyAction = true;
+        }
+    });
+
+    let filterGlowClass = "";
+    if (hasActiveFilter && activeFilter) {
+        if (activeFilter === 'red') filterGlowClass = "ring-4 ring-offset-1 ring-red-500 shadow-[0_0_15px_rgba(239,68,68,0.8)] z-20 scale-[1.02] border-red-500";
+        if (activeFilter === 'purple') filterGlowClass = "ring-4 ring-offset-1 ring-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.8)] z-20 scale-[1.02] border-purple-500";
+        if (activeFilter === 'green') filterGlowClass = "ring-4 ring-offset-1 ring-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.8)] z-20 scale-[1.02] border-emerald-500";
+        if (activeFilter === 'yellow') filterGlowClass = "ring-4 ring-offset-1 ring-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.8)] z-20 scale-[1.02] border-amber-500";
+        if (activeFilter === 'blue') filterGlowClass = "ring-4 ring-offset-1 ring-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.8)] z-20 scale-[1.02] border-blue-500";
+    }
+
     return (
         <div
             ref={setNodeRef}
@@ -74,8 +98,9 @@ function DraggableRack({ rack, style, mode, onSelect }: { rack: Rack, style?: Re
                 mode === 'edit' ? "cursor-move hover:border-primary" : "cursor-pointer hover:scale-105 active:scale-95 pointer-events-auto",
                 rack.status === 'Maintenance' ? 'border-destructive bg-destructive/10' : 'border-border',
                 isCement ? 'bg-stone-300 dark:bg-stone-800' : 'bg-slate-200 dark:bg-slate-900',
-                rack.shakeNeeded && "border-orange-500 border-4 animate-pulse",
-                isDragging && "shadow-xl opacity-80 ring-2 ring-primary"
+                rack.shakeNeeded && !hasActiveFilter && "border-orange-500 border-4 animate-pulse",
+                isDragging && "shadow-xl opacity-80 ring-2 ring-primary",
+                filterGlowClass
             )}
             title={`${rack.name} (${rack.material}, ${rack.totalLayers} layers) - ${rack.lightType} Light`}
         >
@@ -92,16 +117,18 @@ function DraggableRack({ rack, style, mode, onSelect }: { rack: Rack, style?: Re
             <div className={cn("absolute top-0.5 right-0.5 w-2 h-2 rounded-full border border-white/20", lightColorClass)} />
 
             {/* Warning Icon */}
-            {rack.shakeNeeded && (
-                <div className="absolute -top-2 -left-2 bg-orange-500 text-white rounded-full p-0.5 w-5 h-5 flex items-center justify-center shadow-md animate-bounce">
-                    !
+            {hasAnyAction && (
+                <div className={cn("absolute -top-2 -left-2 text-white rounded-full p-0.5 w-5 h-5 flex items-center justify-center shadow-md",
+                    hasActiveFilter ? "bg-primary animate-bounce ring-2 ring-white" : "bg-orange-500"
+                )}>
+                    A
                 </div>
             )}
         </div>
     );
 }
 
-export function BlueprintEditor({ racks, roomWidth = 20, roomHeight = 15 }: { racks: Rack[], roomWidth?: number, roomHeight?: number }) {
+export function BlueprintEditor({ racks, roomWidth = 20, roomHeight = 15, activeFilter = null }: { racks: Rack[], roomWidth?: number, roomHeight?: number, activeFilter?: string | null }) {
     const [items, setItems] = useState<Rack[]>(racks);
     const [isSaving, setIsSaving] = useState(false);
     const [mode, setMode] = useState<'edit' | 'access'>('access');
@@ -273,6 +300,7 @@ export function BlueprintEditor({ racks, roomWidth = 20, roomHeight = 15 }: { ra
                                         key={Number(rack.id)}
                                         rack={rack}
                                         mode={mode}
+                                        activeFilter={activeFilter}
                                         onSelect={() => {
                                             if (mode === 'access') {
                                                 setSelectedRack(rack);
@@ -291,6 +319,7 @@ export function BlueprintEditor({ racks, roomWidth = 20, roomHeight = 15 }: { ra
                 open={!!selectedRack}
                 onOpenChange={(open) => !open && setSelectedRack(null)}
                 rackId={selectedRack?.id || null}
+                activeFilter={activeFilter}
             />
         </div>
     );

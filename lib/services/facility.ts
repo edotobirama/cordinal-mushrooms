@@ -70,6 +70,18 @@ export async function deleteRackService(db: any, id: number) {
     if (activeBatchCountRes[0]?.count > 0) {
         throw new Error("Cannot delete rack with active batches.");
     }
+
+    // Safely delete cascaded relations to prevent SQLite FK constraint errors
+    await db.delete(schema.rackLayers).where(eq(schema.rackLayers.rackId, id));
+    await db.delete(schema.batchLocations).where(eq(schema.batchLocations.rackId, id));
+
+    const inactiveBatches = await db.select({ id: schema.batches.id }).from(schema.batches).where(eq(schema.batches.rackId, id));
+    for (const b of inactiveBatches) {
+        await db.delete(schema.inventoryItems).where(eq(schema.inventoryItems.batchId, b.id));
+        await db.delete(schema.batchActions).where(eq(schema.batchActions.batchId, b.id));
+    }
+
+    await db.delete(schema.batches).where(eq(schema.batches.rackId, id));
     await db.delete(schema.racks).where(eq(schema.racks.id, id));
 }
 

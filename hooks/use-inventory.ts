@@ -9,7 +9,8 @@ import {
     updateStockService,
     deleteMaterialService,
     performDailyCheckService,
-    getInventoryItemsByTypeService
+    getInventoryItemsByTypeService,
+    convertJarToDriedService
 } from "@/lib/services/inventory";
 
 export function useInventory() {
@@ -24,6 +25,7 @@ export function useInventory() {
             type: get("type") as string,
             quantity: Number(get("quantity")),
             unit: get("unit") as string,
+            isPreserved: get("isPreserved") === "on",
             notes: get("notes") as string
         });
         await saveDatabase();
@@ -85,8 +87,15 @@ export function useInventory() {
         return await getInventoryItemsByTypeService(db, type);
     }, [db]);
 
+    const convertToDried = useCallback(async (id: number) => {
+        if (!db) return;
+        await convertJarToDriedService(db, id);
+        await saveDatabase();
+    }, [db]);
+
     return {
         addToInventory, updateInventoryItem, deleteInventoryItem,
-        addMaterial, updateStock, deleteMaterial, performDailyCheck, getInventoryItemsByType
+        addMaterial, updateStock, deleteMaterial, performDailyCheck, getInventoryItemsByType,
+        convertToDried
     };
 }

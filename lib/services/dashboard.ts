@@ -102,9 +102,9 @@ export async function getStatsService(db: any) {
         .groupBy(schema.batches.type);
 
 
-    const incubation = { spawn: 0, lc: 0, agar: 0 };
+    const incubation = { jars: 0, lc: 0, agar: 0 };
     incubationStats.forEach((stat: any) => {
-        if (stat.type === "Spawn" || stat.type === "Grain" || stat.type === "Basal Medium") incubation.spawn += stat.totalItems || 0;
+        if (stat.type === "Jars" || stat.type === "Spawn" || stat.type === "Grain" || stat.type === "Basal Medium") incubation.jars += stat.totalItems || 0;
         else if (stat.type === "Liquid Culture") incubation.lc += stat.totalItems || 0;
         else if (stat.type === "Base Culture") incubation.agar += stat.totalItems || 0;
     });
@@ -117,11 +117,11 @@ export async function getStatsService(db: any) {
         .from(schema.inventoryItems)
         .groupBy(schema.inventoryItems.type);
 
-    const storage = { lc: 0, agar: 0, spawn: 0 };
+    const storage = { lc: 0, agar: 0, jars: 0 };
     storageStats.forEach((stat: any) => {
         if (stat.type === "Liquid-Culture") storage.lc = stat.count || 0;
         else if (stat.type === "Base Culture") storage.agar = stat.count || 0;
-        else if (stat.type === "Spawn") storage.spawn = stat.count || 0;
+        else if (stat.type === "Jars" || stat.type === "Spawn") storage.jars = stat.count || 0;
     });
 
     const [capacityStat] = await db
@@ -268,9 +268,9 @@ export async function getPendingActionCountsService(db: any) {
                 harvestReadyJars += batch.jarCount;
             }
         } else {
-            if (daysDiff === 13) {
+            if (daysDiff === 14) {
                 removeClothJars += batch.jarCount;
-            } else if (daysDiff === 17) {
+            } else if (daysDiff === 16) {
                 switchLightsJars += batch.jarCount;
             } else if (daysDiff >= 60 && daysDiff < 65) {
                 harvestReadyJars += batch.jarCount;
@@ -350,7 +350,7 @@ export async function getDashboardGridStatsService(db: any) {
             if (age >= 20 && inDarkness) stats.toKeepInLight += batch.jarCount;
             if (age >= 22) stats.toHarvest += batch.jarCount;
         }
-        else if (batch.type === 'Spawn' || batch.type === 'Grain') {
+        else if (batch.type === 'Jars' || batch.type === 'Spawn' || batch.type === 'Grain') {
             const stats = gridStats.fruitingRoom.jars;
             stats.total += batch.jarCount;
             if (inDarkness) stats.inDarkness += batch.jarCount;
@@ -371,7 +371,7 @@ export async function getDashboardGridStatsService(db: any) {
 
         if (item.type === 'Base Culture') {
             const stats = gridStats.storageRoom.baseCulture;
-            const isPreserved = item.notes?.toLowerCase().includes('preserved');
+            const isPreserved = item.isPreserved;
 
             stats.total += item.quantity;
             if (isPreserved) {
@@ -395,7 +395,7 @@ export async function getDashboardGridStatsService(db: any) {
             if (lcAbout) stats.aboutToExpire += item.quantity;
             if (lcExpired) stats.expired += item.quantity;
         }
-        else if (item.type === 'Spawn' || item.type === 'Spawn (Fresh)') {
+        else if (item.type === 'Jars') {
             const stats = gridStats.storageRoom.jars.fresh;
             const fExpired = storageAgeDays >= 60; // 2 months
             const fAbout = storageAgeDays >= 46 && storageAgeDays < 60; // 2 weeks before
@@ -403,7 +403,7 @@ export async function getDashboardGridStatsService(db: any) {
             if (fAbout) stats.aboutToExpire += item.quantity;
             if (fExpired) stats.expired += item.quantity;
         }
-        else if (item.type === 'Spawn (Dry)') {
+        else if (item.type === 'Dried') {
             const stats = gridStats.storageRoom.jars.dry;
             const dExpired = storageAgeDays >= 730; // 2 years
             const dAbout = storageAgeDays >= 670 && storageAgeDays < 730; // 2 months before
@@ -414,4 +414,77 @@ export async function getDashboardGridStatsService(db: any) {
     });
 
     return gridStats;
+}
+
+export async function getFacilityActionMapService(db: any) {
+    const today = new Date();
+
+    // ActionMap Structure:
+    // actionMap[rackId][layerId][actionColor] = [batchIds...]
+    // Color Mapping: Red(Discard), Purple(Shake), Green(Harvest), Yellow(Light), Blue(Cloth)
+    const actionMap: Record<number, Record<number, Record<string, number[]>>> = {};
+
+    const activeBatches = await db.select({
+        id: schema.batches.id,
+        name: schema.batches.name,
+        type: schema.batches.type,
+        startDate: schema.batches.startDate,
+        rackId: schema.batches.rackId,
+        lightStatus: schema.racks.lightStatus
+    })
+        .from(schema.batches)
+        .leftJoin(schema.racks, eq(schema.batches.rackId, schema.racks.id))
+        .where(not(inArray(schema.batches.status, ["Harvested", "Discarded"])));
+
+    const pendingLcShakes = await getPendingLcShakesService(db);
+    const batchesNeedingShake = new Set(pendingLcShakes.map((b: any) => b.id));
+
+    const batchLocations = await db.select().from(schema.batchLocations);
+    const locationsByBatch = batchLocations.reduce((acc: any, loc: any) => {
+        if (!acc[loc.batchId]) acc[loc.batchId] = [];
+        acc[loc.batchId].push(loc);
+        return acc;
+    }, {});
+
+    for (const batch of activeBatches) {
+        if (!batch.rackId) continue;
+
+        const start = parseISO(batch.startDate);
+        const age = differenceInCalendarDays(today, start);
+        const inLight = batch.lightStatus === true || batch.lightStatus === 1;
+        const inDarkness = !inLight;
+
+        let requiredActionColor = null;
+
+        if (batch.type === 'Base Culture') {
+            if (age >= 23 || age > 60) requiredActionColor = 'red'; // Discard
+            else if (age >= 18 && age < 23) requiredActionColor = 'green'; // Harvest
+        }
+        else if (batch.type === 'Liquid Culture') {
+            if (batchesNeedingShake.has(batch.id)) requiredActionColor = 'purple'; // Shake
+            else if (age >= 20 && inDarkness) requiredActionColor = 'yellow'; // Light On
+            else if (age >= 22) requiredActionColor = 'green'; // Harvest
+        }
+        else if (batch.type === 'Jars' || batch.type === 'Spawn' || batch.type === 'Grain') {
+            if (age === 14) requiredActionColor = 'blue'; // Remove Cloth
+            else if (age >= 16 && inDarkness) requiredActionColor = 'yellow'; // Light On
+            else if (age >= 60) requiredActionColor = 'green'; // Harvest
+        }
+
+        if (requiredActionColor) {
+            if (!actionMap[batch.rackId]) actionMap[batch.rackId] = {};
+
+            const locations = locationsByBatch[batch.id] || [{ layer: 1 }]; // Fallback
+
+            for (const loc of locations) {
+                const layerId = loc.layer || 1;
+                if (!actionMap[batch.rackId][layerId]) actionMap[batch.rackId][layerId] = {};
+                if (!actionMap[batch.rackId][layerId][requiredActionColor]) actionMap[batch.rackId][layerId][requiredActionColor] = [];
+
+                actionMap[batch.rackId][layerId][requiredActionColor].push(batch.id);
+            }
+        }
+    }
+
+    return actionMap;
 }

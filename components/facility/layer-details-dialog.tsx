@@ -42,11 +42,13 @@ interface LayerDetailsDialogProps {
     layerNumber: number | null;
     rack: RackDetails;
     onUpdate?: () => void;
+    activeFilter?: string | null;
 }
 
 import { MoveItemsDialog } from "./move-items-dialog";
+import { useFacilityData } from "@/components/providers/facility-provider";
 
-export function LayerDetailsDialog({ open, onOpenChange, layerNumber, rack, onUpdate }: LayerDetailsDialogProps) {
+export function LayerDetailsDialog({ open, onOpenChange, layerNumber, rack, onUpdate, activeFilter }: LayerDetailsDialogProps) {
     const [selectedJar, setSelectedJar] = useState<{ id: string; batch: Batch; day: number } | null>(null);
     const [isAddBatchOpen, setIsAddBatchOpen] = useState(false);
     const [isMoveOpen, setIsMoveOpen] = useState(false);
@@ -57,6 +59,7 @@ export function LayerDetailsDialog({ open, onOpenChange, layerNumber, rack, onUp
     const [isProcessing, setIsProcessing] = useState(false);
     const { harvestBatch, discardBatch, logBatchAction } = useProduction();
     const { updateLayerColor } = useFacility();
+    const { actionMap } = useFacilityData();
 
     const isCement = rack.material === "Cement";
     const rows = isCement ? 6 : 5;
@@ -66,18 +69,22 @@ export function LayerDetailsDialog({ open, onOpenChange, layerNumber, rack, onUp
     // Get batches for this layer
     const batches = rack.batches.filter(b => b.layer === layerNumber && b.status === "Active");
 
-    const allJars: { id: string; batch: Batch; day: number; index: number }[] = [];
+    const allJars: { id: string; batch: Batch; day: number; index: number; isActionMatched?: boolean }[] = [];
     batches.forEach(batch => {
         const startDate = new Date(batch.startDate);
         const today = new Date();
         const daysActive = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+
+        const layerActions = actionMap?.[rack.id]?.[layerNumber!] || {};
+        const isActionable = activeFilter ? layerActions[activeFilter]?.includes(batch.id) : false;
 
         for (let i = 0; i < batch.jarCount; i++) {
             allJars.push({
                 id: `${batch.id}-J${i + 1}`,
                 batch: batch,
                 day: daysActive,
-                index: i
+                index: i,
+                isActionMatched: !!isActionable
             });
         }
     });
@@ -254,9 +261,8 @@ export function LayerDetailsDialog({ open, onOpenChange, layerNumber, rack, onUp
                                     <span className="text-sm font-medium mr-2">Actions:</span>
                                     <Button size="sm" variant="outline" onClick={() => setSelectionMode('harvest')} className="text-emerald-600 border-emerald-200 bg-emerald-50">Harvest</Button>
                                     <Button size="sm" variant="outline" onClick={() => setSelectionMode('discard')} className="text-red-600 border-red-200 bg-red-50">Discard</Button>
-                                    <Button size="sm" variant="outline" onClick={() => setSelectionMode('move')} className="text-blue-600 border-blue-200 bg-blue-50">Move</Button>
+                                    <Button size="sm" variant="outline" onClick={() => setSelectionMode('move')} className="text-orange-600 border-orange-200 bg-orange-50">Move Cycle</Button>
                                     <Button size="sm" variant="outline" onClick={() => setSelectionMode('shake')} className="text-purple-600 border-purple-200 bg-purple-50">Shake</Button>
-                                    <Button size="sm" variant="outline" onClick={() => setSelectionMode('cloth')}>Put Cloth</Button>
                                     <Button size="sm" variant="outline" onClick={() => setSelectionMode('no-cloth')}>Remove Cloth</Button>
                                 </>
                             ) : (
@@ -314,8 +320,19 @@ export function LayerDetailsDialog({ open, onOpenChange, layerNumber, rack, onUp
                             }}
                         >
                             {Array.from({ length: totalSlots }).map((_, idx) => {
-                                const jar = allJars[idx];
+                                const jar = allJars[idx] as any;
                                 const isSelected = jar && selectedJars.has(jar.id);
+                                const isActionMatched = jar?.isActionMatched;
+
+                                // Filter-specific glow
+                                let glowClass = "";
+                                if (isActionMatched && activeFilter) {
+                                    if (activeFilter === 'red') glowClass = "ring-2 ring-offset-1 ring-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)] z-20 scale-110 animate-pulse border-red-500";
+                                    else if (activeFilter === 'purple') glowClass = "ring-2 ring-offset-1 ring-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.8)] z-20 scale-110 animate-pulse border-purple-500";
+                                    else if (activeFilter === 'green') glowClass = "ring-2 ring-offset-1 ring-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)] z-20 scale-110 animate-pulse border-emerald-500";
+                                    else if (activeFilter === 'yellow') glowClass = "ring-2 ring-offset-1 ring-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.8)] z-20 scale-110 animate-pulse border-amber-500";
+                                    else if (activeFilter === 'blue') glowClass = "ring-2 ring-offset-1 ring-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.8)] z-20 scale-110 animate-pulse border-blue-500";
+                                }
 
                                 return (
                                     <div
@@ -351,7 +368,9 @@ export function LayerDetailsDialog({ open, onOpenChange, layerNumber, rack, onUp
                                                                     : jar.batch.stage === 'Fruiting' ? "bg-purple-100 border-purple-600 text-purple-900"
                                                                         : "bg-green-100 border-green-600 text-green-900"))
                                                 : "bg-white border-stone-200 text-transparent",
-                                            jar && !isSelected && selectionMode ? "opacity-70 hover:opacity-100" : ""
+                                            jar && !isSelected && selectionMode ? "opacity-70 hover:opacity-100" : "",
+                                            glowClass,
+                                            jar && activeFilter && !isActionMatched && "opacity-30 grayscale hover:opacity-100 transition-opacity"
                                         )}
                                         title={jar ? `ID: ${jar.id}\nType: ${jar.batch.type || 'Jar'}\nBatch: ${jar.batch.name}\nStage: ${jar.batch.stage}` : "Empty Slot"}
                                     >

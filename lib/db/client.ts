@@ -210,7 +210,7 @@ async function ensureSchema(sqlite3: any, dbPtr: number) {
         CREATE TABLE IF NOT EXISTS facility_settings (id INTEGER PRIMARY KEY AUTOINCREMENT, room_width REAL NOT NULL DEFAULT 20, room_height REAL NOT NULL DEFAULT 15, shake_morning_time TEXT NOT NULL DEFAULT '09:00', shake_evening_time TEXT NOT NULL DEFAULT '21:00', updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP));
         CREATE TABLE IF NOT EXISTS rack_layers (id INTEGER PRIMARY KEY AUTOINCREMENT, rack_id INTEGER NOT NULL REFERENCES racks(id) ON DELETE CASCADE, layer INTEGER NOT NULL, color TEXT NOT NULL DEFAULT 'White', updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP));
         CREATE TABLE IF NOT EXISTS processing_batches (id INTEGER PRIMARY KEY AUTOINCREMENT, batch_id INTEGER REFERENCES batches(id), name TEXT NOT NULL, stage TEXT NOT NULL DEFAULT 'Drying', quantity INTEGER NOT NULL, start_date TEXT NOT NULL, updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP));
-        CREATE TABLE IF NOT EXISTS inventory_items (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, type TEXT NOT NULL, quantity INTEGER NOT NULL, unit TEXT NOT NULL, batch_id INTEGER, notes TEXT, created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP));
+        CREATE TABLE IF NOT EXISTS inventory_items (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, type TEXT NOT NULL, quantity INTEGER NOT NULL, unit TEXT NOT NULL, batch_id INTEGER, is_preserved INTEGER NOT NULL DEFAULT 0, notes TEXT, created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP));
         CREATE TABLE IF NOT EXISTS inventory_checks (id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT NOT NULL, performed_by TEXT DEFAULT 'System', notes TEXT, created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP));
         CREATE TABLE IF NOT EXISTS batch_actions (id INTEGER PRIMARY KEY AUTOINCREMENT, batch_id INTEGER NOT NULL REFERENCES batches(id) ON DELETE CASCADE, action_type TEXT NOT NULL, performed_by TEXT DEFAULT 'System', performed_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP));
         CREATE TABLE IF NOT EXISTS batch_locations (id INTEGER PRIMARY KEY AUTOINCREMENT, batch_id INTEGER NOT NULL REFERENCES batches(id) ON DELETE CASCADE, rack_id INTEGER NOT NULL REFERENCES racks(id), layer INTEGER NOT NULL, quantity INTEGER NOT NULL, created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP));
@@ -226,7 +226,16 @@ async function ensureSchema(sqlite3: any, dbPtr: number) {
     } catch (e: any) {
         // Ignore duplicate column error, it means we already migrated
         if (!e.message?.includes("duplicate column name")) {
-            console.error("Migration error:", e);
+            console.error("Migration error racks:", e);
+        }
+    }
+
+    try {
+        await sqlite3.exec(dbPtr, `ALTER TABLE inventory_items ADD COLUMN is_preserved INTEGER NOT NULL DEFAULT 0;`);
+        console.log("Added is_preserved column to inventory_items table");
+    } catch (e: any) {
+        if (!e.message?.includes("duplicate column name")) {
+            console.error("Migration error inventory_items:", e);
         }
     }
 }

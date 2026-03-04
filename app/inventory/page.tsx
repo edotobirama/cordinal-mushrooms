@@ -28,8 +28,8 @@ export default function InventoryPage() {
     const [storedItems, setStoredItems] = useState<any[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [stats, setStats] = useState({
-        incubation: { lc: 0, agar: 0, spawn: 0 },
-        storage: { lc: 0, agar: 0, fruit: 0, spawn: 0 },
+        incubation: { lc: 0, agar: 0, jars: 0 },
+        storage: { lc: 0, agar: 0, dried: 0, jars: 0 },
         totalCapacity: 0
     });
 
@@ -52,20 +52,20 @@ export default function InventoryPage() {
             // 3. Stats Logic
             // Incubation
             const activeBatches = await db.select().from(schema.batches).where(not(inArray(schema.batches.status, ["Harvested", "Discarded"])));
-            const incubation = { lc: 0, agar: 0, spawn: 0 };
+            const incubation = { lc: 0, agar: 0, jars: 0 };
             activeBatches.forEach((b: any) => {
                 if (b.type === "Liquid Culture") incubation.lc += b.jarCount;
                 else if (b.type === "Base Culture") incubation.agar += b.jarCount;
-                else if (b.type === "Spawn") incubation.spawn += b.jarCount;
+                else if (b.type === "Jars" || b.type === "Spawn") incubation.jars += b.jarCount;
             });
 
             // Storage
-            const storage = { lc: 0, agar: 0, fruit: 0, spawn: 0 };
+            const storage = { lc: 0, agar: 0, dried: 0, jars: 0 };
             stored.forEach((item: any) => {
                 if (item.type === "Liquid-Culture") storage.lc += item.quantity;
                 else if (item.type === "Base Culture") storage.agar += item.quantity;
-                else if (item.type === "Dried-Sealed" || item.type === "Dried-Capsule") storage.fruit += item.quantity;
-                else if (item.type === "Spawn") storage.spawn += item.quantity;
+                else if (item.type === "Dried") storage.dried += item.quantity;
+                else if (item.type === "Jars") storage.jars += item.quantity;
             });
 
             // Capacity
@@ -86,6 +86,8 @@ export default function InventoryPage() {
     }, [db]);
 
     const filteredStoredItems = storedItems.filter((item) => {
+        if (item.type === 'Waste') return false;
+
         const query = searchQuery.toLowerCase();
         return (
             (item.name && item.name.toLowerCase().includes(query)) ||
@@ -127,8 +129,8 @@ export default function InventoryPage() {
                             <span className="font-bold">{stats.incubation.lc}</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                            <span>Spawn (Grain):</span>
-                            <span className="font-bold">{stats.incubation.spawn}</span>
+                            <span>Jars:</span>
+                            <span className="font-bold">{stats.incubation.jars}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                             <span>Base Culture (Agar):</span>
@@ -148,118 +150,83 @@ export default function InventoryPage() {
                             <span className="font-bold">{stats.storage.lc}</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                            <span>Spawn (Grain):</span>
-                            <span className="font-bold">{stats.storage.spawn}</span>
+                            <span>Jars:</span>
+                            <span className="font-bold">{stats.storage.jars}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                             <span>Base Culture:</span>
                             <span className="font-bold">{stats.storage.agar}</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                            <span>Fruiting Bodies:</span>
-                            <span className="font-bold">{stats.storage.fruit}</span>
+                            <span>Dried:</span>
+                            <span className="font-bold">{stats.storage.dried}</span>
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
-            <Tabs defaultValue="fruiting" className="space-y-4">
-                <TabsList>
-                    <TabsTrigger value="fruiting">Fruiting Batches</TabsTrigger>
-                    <TabsTrigger value="stored">Stored (LC, BC, Jars, Fruit)</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="fruiting" className="space-y-4">
-                    <div className="border rounded-md">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Batch Name</TableHead>
-                                    <TableHead>Type</TableHead>
-                                    <TableHead>Quantity (Jars)</TableHead>
-                                    <TableHead>Start Date</TableHead>
-                                    <TableHead>Est. Ready</TableHead>
+            {/* Stored Items */}
+            <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                    <div className="relative flex-1 max-w-sm">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            type="search"
+                            placeholder="Search inventory..."
+                            className="pl-8"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+                </div>
+                <div className="border rounded-md">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Batch ID</TableHead>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Type</TableHead>
+                                <TableHead>Quantity</TableHead>
+                                <TableHead>Unit</TableHead>
+                                <TableHead>Created Date</TableHead>
+                                <TableHead className="w-[80px]">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {filteredStoredItems.map((item) => (
+                                <TableRow key={item.id}>
+                                    <TableCell>{item.batchId || "-"}</TableCell>
+                                    <TableCell className="font-medium">
+                                        {item.name}
+                                        {item.type === "Base Culture" && item.isPreserved && (
+                                            <span className="ml-2 text-xs bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 px-2 py-0.5 rounded-full font-medium">Preserved</span>
+                                        )}
+                                    </TableCell>
+                                    <TableCell>
+                                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${item.type === 'Waste' ? 'bg-destructive/10 text-destructive' : 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300'
+                                            } `}>
+                                            {item.type}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell>{item.quantity}</TableCell>
+                                    <TableCell>{item.unit}</TableCell>
+                                    <TableCell>{format(new Date(item.createdAt), "PPP")}</TableCell>
+                                    <TableCell>
+                                        <InventoryActions itemId={item.id} itemName={item.name} itemType={item.type} onSuccess={refreshData} />
+                                    </TableCell>
                                 </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {fruitingBatches.map((batch) => (
-                                    <TableRow key={batch.id}>
-                                        <TableCell className="font-medium">{batch.name}</TableCell>
-                                        <TableCell>{batch.type}</TableCell>
-                                        <TableCell>{batch.jarCount}</TableCell>
-                                        <TableCell>{batch.startDate}</TableCell>
-                                        <TableCell>{batch.estimatedReadyDate || "N/A"}</TableCell>
-                                    </TableRow>
-                                ))}
-                                {fruitingBatches.length === 0 && (
-                                    <TableRow>
-                                        <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
-                                            No batches currently in Fruiting stage.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </TabsContent>
-
-                <TabsContent value="stored" className="space-y-4">
-                    <div className="flex items-center space-x-2">
-                        <div className="relative flex-1 max-w-sm">
-                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                type="search"
-                                placeholder="Search inventory..."
-                                className="pl-8"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
-                    </div>
-                    <div className="border rounded-md">
-                        <Table>
-                            <TableHeader>
+                            ))}
+                            {filteredStoredItems.length === 0 && (
                                 <TableRow>
-                                    <TableHead>Batch ID</TableHead>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead>Type</TableHead>
-                                    <TableHead>Quantity</TableHead>
-                                    <TableHead>Unit</TableHead>
-                                    <TableHead>Created Date</TableHead>
-                                    <TableHead className="w-[80px]">Actions</TableHead>
+                                    <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">
+                                        {searchQuery ? "No matching items found." : "No items in storage. Harvest batches to add stock."}
+                                    </TableCell>
                                 </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {filteredStoredItems.map((item) => (
-                                    <TableRow key={item.id}>
-                                        <TableCell>{item.batchId || "-"}</TableCell>
-                                        <TableCell className="font-medium">{item.name}</TableCell>
-                                        <TableCell>
-                                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${item.type === 'Waste' ? 'bg-destructive/10 text-destructive' : 'bg-green-100 text-green-800'
-                                                } `}>
-                                                {item.type}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell>{item.quantity}</TableCell>
-                                        <TableCell>{item.unit}</TableCell>
-                                        <TableCell>{format(new Date(item.createdAt), "PPP")}</TableCell>
-                                        <TableCell>
-                                            <InventoryActions itemId={item.id} itemName={item.name} onSuccess={refreshData} />
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                                {filteredStoredItems.length === 0 && (
-                                    <TableRow>
-                                        <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">
-                                            {searchQuery ? "No matching items found." : "No items in storage. Harvest batches to add stock."}
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </TabsContent>
-            </Tabs>
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+            </div>
         </div>
     );
 }

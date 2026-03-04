@@ -47,7 +47,7 @@ export function NewBatchDialog({ racks, onSuccess }: { racks: Rack[], onSuccess?
         // Spawn/Jar -> Liquid Culture
         let requiredType = "";
         if (selectedType === "Liquid Culture") requiredType = "Base Culture";
-        else if (selectedType === "Spawn") requiredType = "Liquid-Culture"; // Match DB enum
+        else if (selectedType === "Jars") requiredType = "Liquid-Culture"; // Match DB enum
         // If Base Culture itself, source might be spore print or cloning (New Source)
 
         if (requiredType) {
@@ -162,7 +162,7 @@ export function NewBatchDialog({ racks, onSuccess }: { racks: Rack[], onSuccess?
                                     <SelectContent>
                                         <SelectItem value="Liquid Culture">Liquid Culture</SelectItem>
                                         <SelectItem value="Base Culture">Base Culture (Agar)</SelectItem>
-                                        <SelectItem value="Spawn">Spawn (Grain)</SelectItem>
+                                        <SelectItem value="Jars">Jars</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>

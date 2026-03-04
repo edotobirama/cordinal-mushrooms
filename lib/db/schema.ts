@@ -95,6 +95,7 @@ export const inventoryItems = sqliteTable("inventory_items", {
     quantity: integer("quantity").notNull(),
     unit: text("unit").notNull(), // 'grams', 'pieces', 'jars'
     batchId: integer("batch_id"), // Optional reference
+    isPreserved: integer("is_preserved", { mode: "boolean" }).notNull().default(false),
     notes: text("notes"),
     createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`).notNull(),
 });

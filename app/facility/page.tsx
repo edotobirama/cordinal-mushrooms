@@ -18,10 +18,12 @@ import { BlueprintEditor } from "@/components/facility/blueprint-editor";
 import { RackActions } from "@/components/facility/rack-actions";
 import { RoomSettingsDialog } from "@/components/facility/room-settings-dialog";
 import { FacilityProvider, useFacilityData } from "@/components/providers/facility-provider";
+import { FacilityLegend } from "@/components/facility/facility-legend";
 
 function FacilityContent() {
     const { racks: allRacks, settings, isLoading, refresh } = useFacilityData();
     const { updateRackLightStatus } = useFacility();
+    const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
     if (isLoading) {
         return (
@@ -114,8 +116,14 @@ function FacilityContent() {
                 </TabsContent>
 
 
-                <TabsContent value="blueprint" className="overflow-auto">
-                    <BlueprintEditor racks={allRacks} roomWidth={settings?.roomWidth || 20} roomHeight={settings?.roomHeight || 15} />
+                <TabsContent value="blueprint" className="overflow-auto space-y-4">
+                    <FacilityLegend activeFilter={activeFilter} onFilterChange={setActiveFilter} />
+                    <BlueprintEditor
+                        racks={allRacks}
+                        roomWidth={settings?.roomWidth || 20}
+                        roomHeight={settings?.roomHeight || 15}
+                        activeFilter={activeFilter}
+                    />
                 </TabsContent>
             </Tabs>
         </div>

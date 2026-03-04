@@ -22,9 +22,11 @@ import {
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { useInventory } from "@/hooks/use-inventory";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export function AddItemDialog({ onSuccess }: { onSuccess?: () => void }) {
     const [open, setOpen] = useState(false);
+    const [selectedType, setSelectedType] = useState<string>("");
     const { addToInventory } = useInventory();
 
     async function handleSubmit(formData: FormData) {
@@ -66,20 +68,33 @@ export function AddItemDialog({ onSuccess }: { onSuccess?: () => void }) {
                             <Label htmlFor="type" className="text-right">
                                 Type
                             </Label>
-                            <Select name="type" required>
+                            <Select name="type" required onValueChange={setSelectedType}>
                                 <SelectTrigger className="col-span-3">
                                     <SelectValue placeholder="Select Type" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="Liquid-Culture">Liquid Culture</SelectItem>
                                     <SelectItem value="Base Culture">Base Culture (Agar)</SelectItem>
-                                    <SelectItem value="Dried-Sealed">Dried / Sealed</SelectItem>
-                                    <SelectItem value="Dried-Capsule">Capsules</SelectItem>
-                                    <SelectItem value="Spawn">Spawn (Grain)</SelectItem>
-                                    <SelectItem value="Other">Other</SelectItem>
+                                    <SelectItem value="Jars">Jars</SelectItem>
+                                    <SelectItem value="Dried">Dried</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
+
+                        {selectedType === "Base Culture" && (
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="isPreserved" className="text-right">
+                                    Preserved?
+                                </Label>
+                                <div className="col-span-3 flex items-center space-x-2">
+                                    <Checkbox id="isPreserved" name="isPreserved" />
+                                    <Label htmlFor="isPreserved" className="text-sm font-normal cursor-pointer text-muted-foreground">
+                                        Mark this base culture as preserved storage
+                                    </Label>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="quantity" className="text-right">
                                 Quantity
