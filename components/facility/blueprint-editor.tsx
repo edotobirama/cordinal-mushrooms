@@ -259,56 +259,68 @@ export function BlueprintEditor({ racks, roomWidth = 20, roomHeight = 15, active
                     </div>
                 </div>
 
-                <Card className="overflow-hidden bg-background border-2 border-dashed border-border">
+                <Card className="bg-background border-2 border-dashed border-border">
                     <CardContent
-                        className="p-0 relative w-full overflow-auto touch-none flex justify-center items-center bg-muted/20"
+                        className="p-0 relative w-full overflow-auto touch-pan-x touch-pan-y bg-muted/20"
                         style={{ height: '70vh' }}
                     >
                         <div
                             style={{
-                                width: `${roomWidth * GRID_SIZE}px`,
-                                height: `${roomHeight * GRID_SIZE}px`,
+                                width: Math.max(roomWidth * GRID_SIZE * scale, 800) + 'px', // Ensure min width for scrolling on tiny screens
+                                minHeight: '100%',
                                 position: 'relative',
-                                transform: `scale(${scale})`,
-                                transformOrigin: 'center center',
-                                transition: 'transform 0.2s ease-out',
-                                backgroundColor: 'var(--background)',
-                                boxShadow: '0 0 40px rgba(0,0,0,0.1)'
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center'
                             }}
                         >
-                            {/* Grid Background */}
                             <div
-                                className="absolute inset-x-0 top-0 pointer-events-none opacity-20"
                                 style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    backgroundImage: `linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)`,
-                                    backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`,
-                                    borderRight: '1px solid currentColor',
-                                    borderBottom: '1px solid currentColor',
+                                    width: `${roomWidth * GRID_SIZE}px`,
+                                    height: `${roomHeight * GRID_SIZE}px`,
+                                    position: 'relative',
+                                    transform: `scale(${scale})`,
+                                    transformOrigin: 'center center',
+                                    transition: 'transform 0.2s ease-out',
+                                    backgroundColor: 'var(--background)',
+                                    boxShadow: '0 0 40px rgba(0,0,0,0.1)',
+                                    margin: 'auto'
                                 }}
-                            />
+                            >
+                                {/* Grid Background */}
+                                <div
+                                    className="absolute inset-x-0 top-0 pointer-events-none opacity-20"
+                                    style={{
+                                        width: '100%',
+                                        height: '100%',
+                                        backgroundImage: `linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)`,
+                                        backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`,
+                                        borderRight: '1px solid currentColor',
+                                        borderBottom: '1px solid currentColor',
+                                    }}
+                                />
 
-                            <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-                                {items.length === 0 && (
-                                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                        <p className="text-muted-foreground bg-background/80 p-2 rounded">No racks to display in blueprint</p>
-                                    </div>
-                                )}
-                                {items.map((rack) => (
-                                    <DraggableRack
-                                        key={Number(rack.id)}
-                                        rack={rack}
-                                        mode={mode}
-                                        activeFilter={activeFilter}
-                                        onSelect={() => {
-                                            if (mode === 'access') {
-                                                setSelectedRack(rack);
-                                            }
-                                        }}
-                                    />
-                                ))}
-                            </DndContext>
+                                <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+                                    {items.length === 0 && (
+                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                            <p className="text-muted-foreground bg-background/80 p-2 rounded">No racks to display in blueprint</p>
+                                        </div>
+                                    )}
+                                    {items.map((rack) => (
+                                        <DraggableRack
+                                            key={Number(rack.id)}
+                                            rack={rack}
+                                            mode={mode}
+                                            activeFilter={activeFilter}
+                                            onSelect={() => {
+                                                if (mode === 'access') {
+                                                    setSelectedRack(rack);
+                                                }
+                                            }}
+                                        />
+                                    ))}
+                                </DndContext>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>

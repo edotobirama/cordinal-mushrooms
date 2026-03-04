@@ -18,14 +18,44 @@ export function DataManagement() {
             const blob = await exportDatabase();
             if (!blob) throw new Error("Failed to export database");
 
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `cordinal_backup_${new Date().toISOString().split('T')[0]}.db`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            const fileName = `cordinal_backup_${new Date().toISOString().split('T')[0]}.db`;
+
+            // Check if running in Capacitor Native
+            const { Capacitor } = await import('@capacitor/core');
+            if (Capacitor.isNativePlatform()) {
+                const { Filesystem, Directory } = await import('@capacitor/filesystem');
+
+                // Convert Blob to Base64 
+                const reader = new FileReader();
+                reader.readAsDataURL(blob);
+                reader.onloadend = async () => {
+                    const base64data = reader.result?.toString().split(',')[1];
+                    if (base64data) {
+                        try {
+                            await Filesystem.writeFile({
+                                path: fileName,
+                                data: base64data,
+                                directory: Directory.Documents
+                            });
+                            setStatus({ type: 'success', message: `Saved to Documents/${fileName}` });
+                        } catch (err) {
+                            console.error("Native write error:", err);
+                            setStatus({ type: 'error', message: "Failed to save file to Documents" });
+                        }
+                    }
+                };
+            } else {
+                // Web Fallback
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                setStatus({ type: 'success', message: "Database exported successfully" });
+            }
         } catch (error) {
             console.error(error);
             setStatus({ type: 'error', message: "Export failed" });
