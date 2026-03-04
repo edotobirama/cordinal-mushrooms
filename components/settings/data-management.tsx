@@ -102,7 +102,7 @@ export function DataManagement() {
                     <div className="flex items-center gap-2 w-full sm:w-auto">
                         <Input
                             type="file"
-                            accept=".db,application/x-sqlite3,.sqlite"
+                            accept="*/*"
                             onChange={handleImport}
                             disabled={isImporting}
                             className="w-full"
