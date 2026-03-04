@@ -14,12 +14,12 @@ import { useState } from "react";
 
 export function ProductionActions({ batchId, batchName, onSuccess }: { batchId: number, batchName: string, onSuccess?: () => void }) {
     const [isLoading, setIsLoading] = useState(false);
-    const { deleteBatch } = useProduction();
+    const { discardBatch } = useProduction();
 
     const handleDelete = async () => {
-        if (confirm(`Are you sure you want to delete batch "${batchName}"?`)) {
+        if (confirm(`Are you sure you want to discard batch "${batchName}"?`)) {
             setIsLoading(true);
-            await deleteBatch(batchId);
+            await discardBatch(batchId);
             setIsLoading(false);
             if (onSuccess) onSuccess();
             else window.location.reload();
@@ -41,7 +41,7 @@ export function ProductionActions({ batchId, batchName, onSuccess }: { batchId: 
                     className="text-destructive focus:text-destructive"
                 >
                     <Trash className="mr-2 h-4 w-4" />
-                    Delete
+                    Discard
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>

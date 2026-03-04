@@ -1,0 +1,42 @@
+﻿
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+  CORDINAL MUSHROOMS ΓÇö DATA INTEGRITY AUDIT
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+ΓöÇΓöÇ 1. Ghost batchLocations (for Harvested/Discarded batches) ΓöÇΓöÇ
+  Γ£ô No ghost batchLocations for Harvested/Discarded batches
+  Γ£ô No orphan batchLocations (batchId pointing to deleted batch)
+
+ΓöÇΓöÇ 2. Rack currentUsage vs actual batchLocations sum ΓöÇΓöÇ
+  Γ£ô All rack currentUsage values match actual batchLocations sums
+
+ΓöÇΓöÇ 3. Orphan inventoryItems (batchId pointing to non-existent batch) ΓöÇΓöÇ
+  Γ£ô No orphan inventoryItems
+
+ΓöÇΓöÇ 4. Orphan batchActions (batchId pointing to non-existent batch) ΓöÇΓöÇ
+  Γ£ô No orphan batchActions
+
+ΓöÇΓöÇ 5. Orphan rackLayers (rackId pointing to non-existent rack) ΓöÇΓöÇ
+  Γ£ô No orphan rackLayers
+
+ΓöÇΓöÇ 6. Duplicate inventoryItems (same name + type + isPreserved, separate rows) ΓöÇΓöÇ
+  Γ£ô No duplicate inventoryItem rows
+
+ΓöÇΓöÇ 7. batches.rackId/layer vs batchLocations ΓÇö canonical location check ΓöÇΓöÇ
+  Γä╣ Batch "Move Test Batch" spans multiple locations: [rack=26 layer=1 qty=5, rack=27 layer=1 qty=5] ΓÇö multi-rack placement (OK)
+  Γ£ô All active batches have at least one batchLocations entry
+
+ΓöÇΓöÇ 8. Duplicate batch names (Active batches only) ΓöÇΓöÇ
+  ΓÜá Duplicate active batch name "Master-LC-260212" (1)
+     ΓåÆ ids: 50, 51
+
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+  AUDIT SUMMARY
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+  Issues found : 1
+  Auto-fixed   : 0
+  Remaining    : 1
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+Action needed: Review the issues above. Some require manual decisions.
+

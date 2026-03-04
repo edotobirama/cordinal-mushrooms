@@ -7,7 +7,8 @@ import {
     discardBatchService,
     deleteBatchService,
     updateBatchService,
-    logBatchActionService
+    logBatchActionService,
+    discardPartialBatchService
 } from "@/lib/services/production";
 
 export function useProduction() {
@@ -56,6 +57,12 @@ export function useProduction() {
         await saveDatabase();
     }, [db]);
 
+    const discardPartialBatch = useCallback(async (batchId: number, rackId: number, layer: number, quantity: number) => {
+        if (!db) return;
+        await discardPartialBatchService(db, batchId, rackId, layer, quantity);
+        await saveDatabase();
+    }, [db]);
+
     const updateBatch = useCallback(async (formData: FormData | any) => {
         if (!db) return;
         const get = (key: string) => (formData instanceof FormData ? formData.get(key) : formData[key]);
@@ -77,5 +84,5 @@ export function useProduction() {
         await saveDatabase();
     }, [db]);
 
-    return { startBatch, updateBatch, harvestBatch, discardBatch, deleteBatch, logBatchAction };
+    return { startBatch, updateBatch, harvestBatch, discardBatch, deleteBatch, logBatchAction, discardPartialBatch };
 }

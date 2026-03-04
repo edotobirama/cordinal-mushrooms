@@ -58,6 +58,31 @@ export function MoveItemsDialog({ open, onOpenChange, selectedItems, onSuccess, 
         if (!targetRackId || !targetLayer) return;
         setIsLoading(true);
         try {
+            // Validate layer capacity before moving
+            const totalMovingCount = selectedItems.reduce((acc, item) => acc + item.count, 0);
+            const rack = racks.find(r => r.id.toString() === targetRackId);
+
+            if (rack) {
+                const maxLayers = rack.totalLayers || 7;
+                const layerCapacity = Math.floor(rack.capacity / maxLayers);
+                // Note: layerUsages requires the Rack interface to include it, and for getAllRacks to provide it
+                const currentLayerUsage = (rack as any).layerUsages?.[Number(targetLayer)] || 0;
+
+                // Allow moving within the same layer without capacity penalty
+                let actualAdditionalCount = totalMovingCount;
+                for (const item of selectedItems) {
+                    if (item.sourceRackId === Number(targetRackId) && item.sourceLayer === Number(targetLayer)) {
+                        actualAdditionalCount -= item.count;
+                    }
+                }
+
+                if (actualAdditionalCount + currentLayerUsage > layerCapacity) {
+                    setIsLoading(false);
+                    alert(`Not enough capacity on ${rack.name} Layer ${targetLayer}.\nIt can hold ${layerCapacity} items total, and ${currentLayerUsage} are already used.\nYou are trying to add ${actualAdditionalCount} more.`);
+                    return;
+                }
+            }
+
             const itemsToMove = selectedItems.map(item => ({
                 batchId: item.batchId,
                 count: item.count,

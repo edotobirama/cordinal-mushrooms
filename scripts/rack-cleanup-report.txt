@@ -1,0 +1,84 @@
+=== CURRENT STATE ===
+RACKS:
+  id=1 name="L1" currentUsage=85
+  id=2 name="L2" currentUsage=0
+  id=4 name="L5" currentUsage=0
+  id=5 name="L4" currentUsage=0
+  id=6 name="L6" currentUsage=0
+  id=7 name="L7" currentUsage=0
+  id=8 name="L3" currentUsage=0
+  id=9 name="M1" currentUsage=0
+  id=10 name="M2" currentUsage=0
+  id=11 name="M3" currentUsage=0
+  id=12 name="M4" currentUsage=6
+  id=13 name="M5" currentUsage=0
+  id=14 name="M6" currentUsage=21
+  id=15 name="E1" currentUsage=0
+  id=16 name="E2" currentUsage=0
+  id=17 name="E3" currentUsage=0
+  id=18 name="R1" currentUsage=0
+  id=19 name="R2" currentUsage=0
+  id=20 name="R3" currentUsage=0
+  id=24 name="Source Rack" currentUsage=0
+  id=25 name="Target Rack" currentUsage=0
+  id=26 name="Source Rack" currentUsage=5
+  id=27 name="Target Rack" currentUsage=5
+
+ALL BATCHES:
+  id=29 name="Test Batch 1770896074972" status=Harvested rackId=1 layer=1 jarCount=5
+  id=30 name="Test Batch 1770896107900" status=Harvested rackId=1 layer=1 jarCount=5
+  id=45 name="LC0-Jar-260213" status=Active rackId=1 layer=1 jarCount=18
+  id=46 name="Move Test Batch" status=Active rackId=26 layer=1 jarCount=5
+  id=48 name="LC0-Jar-260212" status=Active rackId=14 layer=8 jarCount=7
+  id=50 name="Master-LC-260212" status=Active rackId=12 layer=8 jarCount=6
+  id=51 name="Master-LC-260212" status=Active rackId=14 layer=8 jarCount=21
+  id=52 name="Move Test Batch-discard" status=Contaminated rackId=26 layer=1 jarCount=5
+  id=61 name="LC-TEST-LC-260223" status=Active rackId=1 layer=1 jarCount=10
+  id=62 name="Master-BC-260223" status=Active rackId=1 layer=1 jarCount=50
+
+ALL batchLocations:
+  locId=9 batchId=45("LC0-Jar-260213" Active) rack="L1" layer=1 qty=18
+  locId=10 batchId=46("Move Test Batch" Active) rack="Source Rack" layer=1 qty=5
+  locId=11 batchId=46("Move Test Batch" Active) rack="Target Rack" layer=1 qty=5
+  locId=15 batchId=48("LC0-Jar-260212" Active) rack="L1" layer=4 qty=7
+  locId=17 batchId=50("Master-LC-260212" Active) rack="M4" layer=8 qty=6
+  locId=18 batchId=51("Master-LC-260212" Active) rack="M6" layer=8 qty=21
+  locId=21 batchId=61("LC-TEST-LC-260223" Active) rack="L1" layer=1 qty=10
+  locId=22 batchId=62("Master-BC-260223" Active) rack="L1" layer=1 qty=50
+
+=== CLEANING ALL batchLocations and resetting rack usage ===
+  Deleted all 8 batchLocation row(s)
+  Reset rack "L1" (id=1) currentUsage → 0
+  Reset rack "L2" (id=2) currentUsage → 0
+  Reset rack "L5" (id=4) currentUsage → 0
+  Reset rack "L4" (id=5) currentUsage → 0
+  Reset rack "L6" (id=6) currentUsage → 0
+  Reset rack "L7" (id=7) currentUsage → 0
+  Reset rack "L3" (id=8) currentUsage → 0
+  Reset rack "M1" (id=9) currentUsage → 0
+  Reset rack "M2" (id=10) currentUsage → 0
+  Reset rack "M3" (id=11) currentUsage → 0
+  Reset rack "M4" (id=12) currentUsage → 0
+  Reset rack "M5" (id=13) currentUsage → 0
+  Reset rack "M6" (id=14) currentUsage → 0
+  Reset rack "E1" (id=15) currentUsage → 0
+  Reset rack "E2" (id=16) currentUsage → 0
+  Reset rack "E3" (id=17) currentUsage → 0
+  Reset rack "R1" (id=18) currentUsage → 0
+  Reset rack "R2" (id=19) currentUsage → 0
+  Reset rack "R3" (id=20) currentUsage → 0
+  Reset rack "Source Rack" (id=24) currentUsage → 0
+  Reset rack "Target Rack" (id=25) currentUsage → 0
+  Reset rack "Source Rack" (id=26) currentUsage → 0
+  Reset rack "Target Rack" (id=27) currentUsage → 0
+
+  Marking 7 remaining Active batches as Discarded:
+    → batch "LC0-Jar-260213" (id=45)
+    → batch "Move Test Batch" (id=46)
+    → batch "LC0-Jar-260212" (id=48)
+    → batch "Master-LC-260212" (id=50)
+    → batch "Master-LC-260212" (id=51)
+    → batch "LC-TEST-LC-260223" (id=61)
+    → batch "Master-BC-260223" (id=62)
+
+=== Done. All racks reset to 0 usage. ===

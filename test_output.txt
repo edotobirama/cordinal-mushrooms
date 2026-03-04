@@ -1,0 +1,114 @@
+﻿
+[1m[36mΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ[0m
+[1m[36m  CORDINAL MUSHROOMS ΓÇö BACKEND TEST SUITE[0m
+[1m[36mΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ[0m
+
+[1m[1] FACILITY ΓÇö Racks & Settings[0m
+  [33mΓû╖[0m addRackService ΓÇö creates a rack ΓÇª [32mPASS[0m
+  [33mΓû╖[0m addRackService ΓÇö creates second rack (for move test) ΓÇª [32mPASS[0m
+  [33mΓû╖[0m updateRackService ΓÇö updates rack name and capacity ΓÇª [32mPASS[0m
+  [33mΓû╖[0m updateRackLightStatusService ΓÇö toggles light on ΓÇª [32mPASS[0m
+  [33mΓû╖[0m updateLayerColorService ΓÇö sets layer color ΓÇª [32mPASS[0m
+  [33mΓû╖[0m updateRackLayerCountService ΓÇö adds a layer ΓÇª [32mPASS[0m
+  [33mΓû╖[0m getAllRacksService ΓÇö returns array with test racks ΓÇª [32mPASS[0m
+  [33mΓû╖[0m duplicateRackService ΓÇö creates a copy ΓÇª [32mPASS[0m
+  [33mΓû╖[0m updateFacilitySettingsService ΓÇö upserts settings ΓÇª [32mPASS[0m
+  [33mΓû╖[0m getFacilitySettingsService ΓÇö returns settings ΓÇª [32mPASS[0m
+
+[1m[2] PRODUCTION ΓÇö Batches & Actions[0m
+  [33mΓû╖[0m startBatchService ΓÇö creates an active LC batch (Day 0) ΓÇª [31mFAIL[0m ΓÇö no such column: "is_preserved" - should this be a string literal in single-quotes?
+  [33mΓû╖[0m startBatchService ΓÇö creates an old Jar batch (Day 22, ready to harvest) ΓÇª [31mFAIL[0m ΓÇö no such column: "is_preserved" - should this be a string literal in single-quotes?
+  [33mΓû╖[0m logBatchActionService ΓÇö logs a Shake action ΓÇª [31mFAIL[0m ΓÇö NOT NULL constraint failed: batch_actions.batch_id
+  [33mΓû╖[0m logBatchActionService ΓÇö logs a Mist action ΓÇª [31mFAIL[0m ΓÇö NOT NULL constraint failed: batch_actions.batch_id
+  [33mΓû╖[0m updateBatchService ΓÇö updates batch name and jar count ΓÇª [31mFAIL[0m ΓÇö Cannot read properties of undefined (reading 'name')
+  [33mΓû╖[0m getRackDetailsService ΓÇö returns rack with batch locations ΓÇª [32mPASS[0m
+  [33mΓû╖[0m moveBatchItemsService ΓÇö moves batch items to second rack ΓÇª  (skipped ΓÇö no batchLocations found)
+[32mPASS[0m
+  [33mΓû╖[0m repairRackUsageService ΓÇö recalculates usage without error ΓÇª [32mPASS[0m
+  [33mΓû╖[0m discardPartialBatchService ΓÇö discards partial quantity ΓÇª [32mPASS[0m
+  [33mΓû╖[0m harvestBatchService ΓÇö harvests a batch and adds to inventory ΓÇª [31mFAIL[0m ΓÇö no such column: "is_preserved" - should this be a string literal in single-quotes?
+  [33mΓû╖[0m discardBatchService ΓÇö discards a batch ΓÇª [31mFAIL[0m ΓÇö no such column: "is_preserved" - should this be a string literal in single-quotes?
+
+[1m[3] INVENTORY ΓÇö Items & Materials[0m
+  [33mΓû╖[0m addToInventoryService ΓÇö inserts new item ΓÇª [31mFAIL[0m ΓÇö no such column: "is_preserved" - should this be a string literal in single-quotes?
+  [33mΓû╖[0m addToInventoryService ΓÇö stacks quantity on duplicate name+type ΓÇª [31mFAIL[0m ΓÇö no such column: "is_preserved" - should this be a string literal in single-quotes?
+  [33mΓû╖[0m updateInventoryItemService ΓÇö updates quantity ΓÇª [31mFAIL[0m ΓÇö no such column: "is_preserved" - should this be a string literal in single-quotes?
+  [33mΓû╖[0m getInventoryItemsByTypeService ΓÇö returns filtered items ΓÇª [31mFAIL[0m ΓÇö no such column: "is_preserved" - should this be a string literal in single-quotes?
+  [33mΓû╖[0m convertJarToDriedService ΓÇö converts 1 jar to Dried entry ΓÇª [31mFAIL[0m ΓÇö no such column: "is_preserved" - should this be a string literal in single-quotes?
+  [33mΓû╖[0m addMaterialService ΓÇö inserts a supply material ΓÇª [32mPASS[0m
+  [33mΓû╖[0m updateStockService ΓÇö updates material quantity ΓÇª [32mPASS[0m
+  [33mΓû╖[0m deleteInventoryItemService ΓÇö removes item ΓÇª [31mFAIL[0m ΓÇö no such column: "is_preserved" - should this be a string literal in single-quotes?
+  [33mΓû╖[0m deleteMaterialService ΓÇö removes material ΓÇª [32mPASS[0m
+
+[1m[4] DASHBOARD ΓÇö Stats & Actions[0m
+  [33mΓû╖[0m getStatsService ΓÇö returns incubation and storage stats ΓÇª [32mPASS[0m
+  [33mΓû╖[0m getActionsService ΓÇö returns pending action list ΓÇª [32mPASS[0m
+  [33mΓû╖[0m getRecentActivityService ΓÇö returns recent batches ΓÇª [32mPASS[0m
+  [33mΓû╖[0m getPendingActionCountsService ΓÇö returns counts object ΓÇª [32mPASS[0m
+  [33mΓû╖[0m getDashboardGridStatsService ΓÇö returns room grid stats ΓÇª [31mFAIL[0m ΓÇö no such column: "is_preserved" - should this be a string literal in single-quotes?
+
+[1m[5] CLEANUP[0m
+  [33mΓû╖[0m deleteRackService ΓÇö refuses to delete rack with active batches ΓÇª [31mFAIL[0m ΓÇö Wrong error: Should have thrown
+  [33mΓû╖[0m deleteBatchService ΓÇö deletes test batch and cleans cascade ΓÇª [32mPASS[0m
+  [33mΓû╖[0m deleteRackService ΓÇö deletes rack after no active batches ΓÇª [32mPASS[0m
+
+[1m[36mΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ[0m
+[1m  RESULTS[0m
+[1m[36mΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ[0m
+  [32mΓ£ô[0m addRackService ΓÇö creates a rack
+  [32mΓ£ô[0m addRackService ΓÇö creates second rack (for move test)
+  [32mΓ£ô[0m updateRackService ΓÇö updates rack name and capacity
+  [32mΓ£ô[0m updateRackLightStatusService ΓÇö toggles light on
+  [32mΓ£ô[0m updateLayerColorService ΓÇö sets layer color
+  [32mΓ£ô[0m updateRackLayerCountService ΓÇö adds a layer
+  [32mΓ£ô[0m getAllRacksService ΓÇö returns array with test racks
+  [32mΓ£ô[0m duplicateRackService ΓÇö creates a copy
+  [32mΓ£ô[0m updateFacilitySettingsService ΓÇö upserts settings
+  [32mΓ£ô[0m getFacilitySettingsService ΓÇö returns settings
+  [31mΓ£ù[0m startBatchService ΓÇö creates an active LC batch (Day 0)
+      [31mΓåÆ no such column: "is_preserved" - should this be a string literal in single-quotes?[0m
+  [31mΓ£ù[0m startBatchService ΓÇö creates an old Jar batch (Day 22, ready to harvest)
+      [31mΓåÆ no such column: "is_preserved" - should this be a string literal in single-quotes?[0m
+  [31mΓ£ù[0m logBatchActionService ΓÇö logs a Shake action
+      [31mΓåÆ NOT NULL constraint failed: batch_actions.batch_id[0m
+  [31mΓ£ù[0m logBatchActionService ΓÇö logs a Mist action
+      [31mΓåÆ NOT NULL constraint failed: batch_actions.batch_id[0m
+  [31mΓ£ù[0m updateBatchService ΓÇö updates batch name and jar count
+      [31mΓåÆ Cannot read properties of undefined (reading 'name')[0m
+  [32mΓ£ô[0m getRackDetailsService ΓÇö returns rack with batch locations
+  [32mΓ£ô[0m moveBatchItemsService ΓÇö moves batch items to second rack
+  [32mΓ£ô[0m repairRackUsageService ΓÇö recalculates usage without error
+  [32mΓ£ô[0m discardPartialBatchService ΓÇö discards partial quantity
+  [31mΓ£ù[0m harvestBatchService ΓÇö harvests a batch and adds to inventory
+      [31mΓåÆ no such column: "is_preserved" - should this be a string literal in single-quotes?[0m
+  [31mΓ£ù[0m discardBatchService ΓÇö discards a batch
+      [31mΓåÆ no such column: "is_preserved" - should this be a string literal in single-quotes?[0m
+  [31mΓ£ù[0m addToInventoryService ΓÇö inserts new item
+      [31mΓåÆ no such column: "is_preserved" - should this be a string literal in single-quotes?[0m
+  [31mΓ£ù[0m addToInventoryService ΓÇö stacks quantity on duplicate name+type
+      [31mΓåÆ no such column: "is_preserved" - should this be a string literal in single-quotes?[0m
+  [31mΓ£ù[0m updateInventoryItemService ΓÇö updates quantity
+      [31mΓåÆ no such column: "is_preserved" - should this be a string literal in single-quotes?[0m
+  [31mΓ£ù[0m getInventoryItemsByTypeService ΓÇö returns filtered items
+      [31mΓåÆ no such column: "is_preserved" - should this be a string literal in single-quotes?[0m
+  [31mΓ£ù[0m convertJarToDriedService ΓÇö converts 1 jar to Dried entry
+      [31mΓåÆ no such column: "is_preserved" - should this be a string literal in single-quotes?[0m
+  [32mΓ£ô[0m addMaterialService ΓÇö inserts a supply material
+  [32mΓ£ô[0m updateStockService ΓÇö updates material quantity
+  [31mΓ£ù[0m deleteInventoryItemService ΓÇö removes item
+      [31mΓåÆ no such column: "is_preserved" - should this be a string literal in single-quotes?[0m
+  [32mΓ£ô[0m deleteMaterialService ΓÇö removes material
+  [32mΓ£ô[0m getStatsService ΓÇö returns incubation and storage stats
+  [32mΓ£ô[0m getActionsService ΓÇö returns pending action list
+  [32mΓ£ô[0m getRecentActivityService ΓÇö returns recent batches
+  [32mΓ£ô[0m getPendingActionCountsService ΓÇö returns counts object
+  [31mΓ£ù[0m getDashboardGridStatsService ΓÇö returns room grid stats
+      [31mΓåÆ no such column: "is_preserved" - should this be a string literal in single-quotes?[0m
+  [31mΓ£ù[0m deleteRackService ΓÇö refuses to delete rack with active batches
+      [31mΓåÆ Wrong error: Should have thrown[0m
+  [32mΓ£ô[0m deleteBatchService ΓÇö deletes test batch and cleans cascade
+  [32mΓ£ô[0m deleteRackService ΓÇö deletes rack after no active batches
+
+  [32m23 passed[0m  [31m15 failed[0m
+[1m[36mΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ[0m
+

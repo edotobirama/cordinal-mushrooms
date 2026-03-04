@@ -32,6 +32,17 @@ export async function startBatchService(db: any, params: {
     const sourceName = sourceItem ? sourceItem.name : (sourceId === "New Source" || sourceId === "External" ? "Master" : sourceId);
     const name = providedName || `${sourceName}-${typeAbbr}-${dateStr}`;
 
+    // ── Duplicate name guard ──────────────────────────────────────────────────
+    // Prevent two *Active* batches from having the same name.
+    const existing = await db.select({ id: schema.batches.id, status: schema.batches.status })
+        .from(schema.batches)
+        .where(and(eq(schema.batches.name, name), eq(schema.batches.status, "Active")))
+        .limit(1);
+    if (existing.length > 0) {
+        throw new Error(`A batch named "${name}" is already active (id=${existing[0].id}). Use a different name or start date.`);
+    }
+
+
     const isCultureBatch = ["Liquid Culture", "Base Culture", "Basal Medium"].includes(type);
     let targetLayer = providedLayer || 1;
 
@@ -165,20 +176,94 @@ export async function harvestBatchService(db: any, batchId: number) {
 }
 
 export async function discardBatchService(db: any, batchId: number) {
+    const batchRes = await db.select().from(schema.batches).where(eq(schema.batches.id, batchId)).limit(1);
+    const batch = batchRes[0];
+    if (!batch) return;
+
     await db.update(schema.batches)
-        .set({ status: "Discarded", stage: "Discarded" })
+        .set({ status: "Discarded", stage: "Discarded", updatedAt: new Date().toISOString() })
         .where(eq(schema.batches.id, batchId));
 
     const locations = await db.select().from(schema.batchLocations).where(eq(schema.batchLocations.batchId, batchId));
 
     if (locations.length > 0) {
+        // Clean up via batchLocations (normal path)
         for (const loc of locations) {
             await db.update(schema.racks)
                 .set({ currentUsage: sql`MAX(0, ${schema.racks.currentUsage} - ${loc.quantity})` })
                 .where(eq(schema.racks.id, loc.rackId));
         }
         await db.delete(schema.batchLocations).where(eq(schema.batchLocations.batchId, batchId));
+    } else if (batch.rackId && batch.jarCount > 0) {
+        // Fallback: no batchLocations (e.g. deleted by audit), use batch record itself
+        await db.update(schema.racks)
+            .set({ currentUsage: sql`MAX(0, ${schema.racks.currentUsage} - ${batch.jarCount})` })
+            .where(eq(schema.racks.id, batch.rackId));
     }
+}
+
+export async function discardPartialBatchService(db: any, batchId: number, rackId: number, layer: number, quantityToDiscard: number) {
+    // 1. Get current batch and its remaining locations
+    const batchRes = await db.select().from(schema.batches).where(eq(schema.batches.id, batchId)).limit(1);
+    const batch = batchRes[0];
+    if (!batch) return;
+
+    // 2. Identify specific location row to deduct quantity from
+    const locationRes = await db.select().from(schema.batchLocations).where(
+        and(
+            eq(schema.batchLocations.batchId, batchId),
+            eq(schema.batchLocations.rackId, rackId),
+            eq(schema.batchLocations.layer, layer)
+        )
+    ).limit(1);
+
+    const location = locationRes[0];
+    if (!location) return;
+
+    const actualDiscardQuantity = Math.min(quantityToDiscard, location.quantity);
+
+    // 3. Update Rack Usage
+    await db.update(schema.racks)
+        .set({ currentUsage: sql`MAX(0, ${schema.racks.currentUsage} - ${actualDiscardQuantity})` })
+        .where(eq(schema.racks.id, rackId));
+
+    // 4. Update or Delete Location depending on remaining quantity
+    if (location.quantity <= actualDiscardQuantity) {
+        await db.delete(schema.batchLocations).where(eq(schema.batchLocations.id, location.id));
+    } else {
+        await db.update(schema.batchLocations)
+            .set({ quantity: location.quantity - actualDiscardQuantity })
+            .where(eq(schema.batchLocations.id, location.id));
+    }
+
+    // 5. Update Total Batch Jar Count
+    const newJarCount = Math.max(0, batch.jarCount - actualDiscardQuantity);
+
+    // 6. Check if entire batch should be marked Discarded
+    // Sometimes there are no locations so we should fallback to verifying jarCount drops to 0
+    if (newJarCount <= 0) {
+        // Discard the whole batch since everything is gone
+        await db.update(schema.batches)
+            .set({ status: "Discarded", stage: "Discarded", jarCount: 0 })
+            .where(eq(schema.batches.id, batch.id));
+    } else {
+        // Otherwise just update the jarCount
+        await db.update(schema.batches)
+            .set({ jarCount: newJarCount })
+            .where(eq(schema.batches.id, batch.id));
+    }
+
+    // 7. Log Action and Create Waste Item Record
+    await logBatchActionService(db, batch.id, `Discarded ${actualDiscardQuantity} jars`);
+
+    await db.insert(schema.inventoryItems).values({
+        name: `${batch.name} - Discarded`,
+        type: "Waste",
+        quantity: actualDiscardQuantity,
+        unit: "jars",
+        batchId: batch.id,
+        notes: `Partially discarded from Rack ${rackId}, Layer ${layer}`
+    });
 }
 
 export async function deleteBatchService(db: any, id: number) {

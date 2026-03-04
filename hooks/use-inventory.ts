@@ -5,6 +5,9 @@ import {
     addToInventoryService,
     updateInventoryItemService,
     deleteInventoryItemService,
+    discardInventoryItemService,
+    permanentlyDeleteBatchService,
+    permanentlyDeleteWasteItemService,
     addMaterialService,
     updateStockService,
     deleteMaterialService,
@@ -93,8 +96,27 @@ export function useInventory() {
         await saveDatabase();
     }, [db]);
 
+    const discardInventoryItem = useCallback(async (id: number) => {
+        if (!db) return;
+        await discardInventoryItemService(db, id);
+        await saveDatabase();
+    }, [db]);
+
+    const permanentlyDeleteBatch = useCallback(async (batchId: number) => {
+        if (!db) return;
+        await permanentlyDeleteBatchService(db, batchId);
+        await saveDatabase();
+    }, [db]);
+
+    const permanentlyDeleteWasteItem = useCallback(async (id: number) => {
+        if (!db) return;
+        await permanentlyDeleteWasteItemService(db, id);
+        await saveDatabase();
+    }, [db]);
+
     return {
-        addToInventory, updateInventoryItem, deleteInventoryItem,
+        addToInventory, updateInventoryItem, deleteInventoryItem, discardInventoryItem,
+        permanentlyDeleteBatch, permanentlyDeleteWasteItem,
         addMaterial, updateStock, deleteMaterial, performDailyCheck, getInventoryItemsByType,
         convertToDried
     };

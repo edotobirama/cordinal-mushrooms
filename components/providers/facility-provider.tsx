@@ -33,15 +33,29 @@ export function FacilityProvider({ children }: { children: React.ReactNode }) {
             if (isInitial) setIsLoading(true);
 
             try {
-                const [racksData, settingsData, mapData] = await Promise.all([
+                const [racksData, settingsData, mapData, locsData, activeBatchesData] = await Promise.all([
                     db.select().from(schema.racks),
                     db.select().from(schema.facilitySettings).then((res: any[]) => res[0] || null),
-                    getFacilityActionMapService(db)
+                    getFacilityActionMapService(db),
+                    db.select().from(schema.batchLocations),
+                    db.select({ id: schema.batches.id, status: schema.batches.status }).from(schema.batches)
                 ]);
 
-                // Ensure timestamps are always complete for client-side sorting
+                // Compute live usage per rack from batchLocations (only Active batches)
+                const activeIds = new Set(
+                    activeBatchesData.filter((b: any) => b.status === 'Active').map((b: any) => b.id)
+                );
+                const liveUsage: Record<number, number> = {};
+                for (const loc of locsData) {
+                    if (activeIds.has(loc.batchId)) {
+                        liveUsage[loc.rackId] = (liveUsage[loc.rackId] || 0) + Number(loc.quantity);
+                    }
+                }
+
                 const mappedRacks = racksData.map((rack: any) => ({
                     ...rack,
+                    // Override stored currentUsage with live-computed value
+                    currentUsage: liveUsage[rack.id] ?? 0,
                     createdAt: rack.createdAt || new Date().toISOString(),
                     updatedAt: rack.updatedAt || new Date().toISOString()
                 }));

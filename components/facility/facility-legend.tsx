@@ -11,8 +11,8 @@ const legendItems = [
     { id: "green", label: "Harvest", bgColor: "bg-emerald-500", hoverColor: "hover:bg-emerald-600", textColor: "text-white" },
     { id: "yellow", label: "Light On", bgColor: "bg-amber-500", hoverColor: "hover:bg-amber-600", textColor: "text-white" },
     { id: "blue", label: "Remove Cloth", bgColor: "bg-blue-500", hoverColor: "hover:bg-blue-600", textColor: "text-white" },
-    { id: "orange", label: "Move Cycle", bgColor: "bg-orange-500", hoverColor: "hover:bg-orange-600", textColor: "text-white" }
 ];
+
 
 interface FacilityLegendProps {
     activeFilter: string | null;

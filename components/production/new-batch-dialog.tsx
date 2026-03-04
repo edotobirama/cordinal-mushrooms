@@ -30,6 +30,8 @@ interface Rack {
     name: string;
     capacity: number;
     currentUsage: number;
+    totalLayers?: number;
+    layerUsages?: Record<number, number>;
 }
 
 export function NewBatchDialog({ racks, onSuccess }: { racks: Rack[], onSuccess?: () => void }) {
@@ -84,12 +86,34 @@ export function NewBatchDialog({ racks, onSuccess }: { racks: Rack[], onSuccess?
     // Calculate max layers for selected rack
     const getRackCapacity = (rackId: number) => {
         const rack = racks.find(r => r.id === rackId);
-        return rack ? { layers: 7, name: rack.name, available: rack.capacity - rack.currentUsage } : { layers: 7, name: "Unknown", available: 0 };
+        return rack ? { layers: rack.totalLayers || 7, name: rack.name, available: rack.capacity - rack.currentUsage } : { layers: 7, name: "Unknown", available: 0 };
     };
 
     const today = format(new Date(), "yyyy-MM-dd");
 
     async function handleSubmit(formData: FormData) {
+        // Enforce Layer Capacity
+        const layerTotals: Record<string, number> = {};
+        for (const loc of locations) {
+            const key = `${loc.rackId}-${loc.layer}`;
+            layerTotals[key] = (layerTotals[key] || 0) + loc.quantity;
+        }
+
+        for (const [key, reqQty] of Object.entries(layerTotals)) {
+            const [rackIdStr, layerStr] = key.split('-');
+            const rack = racks.find(r => r.id === Number(rackIdStr));
+            if (rack) {
+                const maxLayers = rack.totalLayers || 7;
+                const layerCapacity = Math.floor(rack.capacity / maxLayers);
+                const currentLayerUsage = rack.layerUsages?.[Number(layerStr)] || 0;
+
+                if (reqQty + currentLayerUsage > layerCapacity) {
+                    alert(`Not enough capacity on ${rack.name} Layer ${layerStr}.\nIt can hold ${layerCapacity} items total, and ${currentLayerUsage} are already used.\nYou requested ${reqQty}, but only ${layerCapacity - currentLayerUsage} slots are available.`);
+                    return;
+                }
+            }
+        }
+
         // Append locations to formData
         formData.append("locations", JSON.stringify(locations));
         // Append calculated total quantity as jarCount (for backward compat and total)

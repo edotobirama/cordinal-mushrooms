@@ -1,0 +1,99 @@
+﻿
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+  CORDINAL MUSHROOMS ΓÇö BACKEND TEST SUITE
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+[1] FACILITY ΓÇö Racks & Settings
+  Γû╖ addRackService ΓÇö creates a rack ΓÇª PASS
+  Γû╖ addRackService ΓÇö creates second rack (for move test) ΓÇª PASS
+  Γû╖ updateRackService ΓÇö updates rack name and capacity ΓÇª PASS
+  Γû╖ updateRackLightStatusService ΓÇö toggles light on ΓÇª PASS
+  Γû╖ updateLayerColorService ΓÇö sets layer color ΓÇª PASS
+  Γû╖ updateRackLayerCountService ΓÇö adds a layer ΓÇª PASS
+  Γû╖ getAllRacksService ΓÇö returns array with test racks ΓÇª PASS
+  Γû╖ duplicateRackService ΓÇö creates a copy ΓÇª PASS
+  Γû╖ updateFacilitySettingsService ΓÇö upserts settings ΓÇª PASS
+  Γû╖ getFacilitySettingsService ΓÇö returns settings ΓÇª PASS
+
+[2] PRODUCTION ΓÇö Batches & Actions
+  Γû╖ startBatchService ΓÇö creates an active LC batch (Day 0) ΓÇª PASS
+  Γû╖ startBatchService ΓÇö creates an old Jar batch (Day 22, ready to harvest) ΓÇª PASS
+  Γû╖ logBatchActionService ΓÇö logs a Shake action ΓÇª PASS
+  Γû╖ logBatchActionService ΓÇö logs a Mist action ΓÇª PASS
+  Γû╖ updateBatchService ΓÇö updates batch name and jar count ΓÇª PASS
+  Γû╖ getRackDetailsService ΓÇö returns rack with batch locations ΓÇª PASS
+  Γû╖ moveBatchItemsService ΓÇö moves batch items to second rack ΓÇª  (skipped ΓÇö no batchLocations found)
+PASS
+  Γû╖ repairRackUsageService ΓÇö recalculates usage without error ΓÇª PASS
+  Γû╖ discardPartialBatchService ΓÇö discards partial quantity ΓÇª PASS
+  Γû╖ harvestBatchService ΓÇö harvests a batch and adds to inventory ΓÇª PASS
+  Γû╖ discardBatchService ΓÇö discards a batch ΓÇª PASS
+
+[3] INVENTORY ΓÇö Items & Materials
+  Γû╖ addToInventoryService ΓÇö inserts new item ΓÇª PASS
+  Γû╖ addToInventoryService ΓÇö stacks quantity on duplicate name+type ΓÇª PASS
+  Γû╖ updateInventoryItemService ΓÇö updates quantity ΓÇª PASS
+  Γû╖ getInventoryItemsByTypeService ΓÇö returns filtered items ΓÇª PASS
+  Γû╖ convertJarToDriedService ΓÇö converts 1 jar to Dried entry ΓÇª PASS
+  Γû╖ addMaterialService ΓÇö inserts a supply material ΓÇª PASS
+  Γû╖ updateStockService ΓÇö updates material quantity ΓÇª PASS
+  Γû╖ deleteInventoryItemService ΓÇö removes item ΓÇª PASS
+  Γû╖ deleteMaterialService ΓÇö removes material ΓÇª PASS
+
+[4] DASHBOARD ΓÇö Stats & Actions
+  Γû╖ getStatsService ΓÇö returns incubation and storage stats ΓÇª PASS
+  Γû╖ getActionsService ΓÇö returns pending action list ΓÇª PASS
+  Γû╖ getRecentActivityService ΓÇö returns recent batches ΓÇª PASS
+  Γû╖ getPendingActionCountsService ΓÇö returns counts object ΓÇª PASS
+  Γû╖ getDashboardGridStatsService ΓÇö returns room grid stats ΓÇª PASS
+
+[5] CLEANUP
+  Γû╖ deleteRackService ΓÇö refuses to delete rack with active batches ΓÇª PASS
+  Γû╖ deleteBatchService ΓÇö deletes test batch and cleans cascade ΓÇª PASS
+  Γû╖ deleteRackService ΓÇö deletes rack after no active batches ΓÇª PASS
+
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+  RESULTS
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+  Γ£ô addRackService ΓÇö creates a rack
+  Γ£ô addRackService ΓÇö creates second rack (for move test)
+  Γ£ô updateRackService ΓÇö updates rack name and capacity
+  Γ£ô updateRackLightStatusService ΓÇö toggles light on
+  Γ£ô updateLayerColorService ΓÇö sets layer color
+  Γ£ô updateRackLayerCountService ΓÇö adds a layer
+  Γ£ô getAllRacksService ΓÇö returns array with test racks
+  Γ£ô duplicateRackService ΓÇö creates a copy
+  Γ£ô updateFacilitySettingsService ΓÇö upserts settings
+  Γ£ô getFacilitySettingsService ΓÇö returns settings
+  Γ£ô startBatchService ΓÇö creates an active LC batch (Day 0)
+  Γ£ô startBatchService ΓÇö creates an old Jar batch (Day 22, ready to harvest)
+  Γ£ô logBatchActionService ΓÇö logs a Shake action
+  Γ£ô logBatchActionService ΓÇö logs a Mist action
+  Γ£ô updateBatchService ΓÇö updates batch name and jar count
+  Γ£ô getRackDetailsService ΓÇö returns rack with batch locations
+  Γ£ô moveBatchItemsService ΓÇö moves batch items to second rack
+  Γ£ô repairRackUsageService ΓÇö recalculates usage without error
+  Γ£ô discardPartialBatchService ΓÇö discards partial quantity
+  Γ£ô harvestBatchService ΓÇö harvests a batch and adds to inventory
+  Γ£ô discardBatchService ΓÇö discards a batch
+  Γ£ô addToInventoryService ΓÇö inserts new item
+  Γ£ô addToInventoryService ΓÇö stacks quantity on duplicate name+type
+  Γ£ô updateInventoryItemService ΓÇö updates quantity
+  Γ£ô getInventoryItemsByTypeService ΓÇö returns filtered items
+  Γ£ô convertJarToDriedService ΓÇö converts 1 jar to Dried entry
+  Γ£ô addMaterialService ΓÇö inserts a supply material
+  Γ£ô updateStockService ΓÇö updates material quantity
+  Γ£ô deleteInventoryItemService ΓÇö removes item
+  Γ£ô deleteMaterialService ΓÇö removes material
+  Γ£ô getStatsService ΓÇö returns incubation and storage stats
+  Γ£ô getActionsService ΓÇö returns pending action list
+  Γ£ô getRecentActivityService ΓÇö returns recent batches
+  Γ£ô getPendingActionCountsService ΓÇö returns counts object
+  Γ£ô getDashboardGridStatsService ΓÇö returns room grid stats
+  Γ£ô deleteRackService ΓÇö refuses to delete rack with active batches
+  Γ£ô deleteBatchService ΓÇö deletes test batch and cleans cascade
+  Γ£ô deleteRackService ΓÇö deletes rack after no active batches
+
+  38 passed  0 failed
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+

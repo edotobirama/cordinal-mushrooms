@@ -175,19 +175,41 @@ export async function moveBatchItemsService(db: any, items: any[], targetRackId:
 }
 
 export async function getAllRacksService(db: any) {
-    const result = await db.select().from(schema.racks);
-    return result.map((r: any) => ({
-        ...r,
-        id: Number(r.id),
-        capacity: Number(r.capacity),
-        currentUsage: Number(r.currentUsage),
-        width: Number(r.width),
-        height: Number(r.height),
-        totalLayers: Number(r.totalLayers),
-        lightIntensity: Number(r.lightIntensity),
-        x: Number(r.x),
-        y: Number(r.y)
-    }));
+    const racks = await db.select().from(schema.racks);
+    const locs = await db.select({
+        rackId: schema.batchLocations.rackId,
+        layer: schema.batchLocations.layer,
+        quantity: schema.batchLocations.quantity
+    })
+        .from(schema.batchLocations)
+        .leftJoin(schema.batches, eq(schema.batchLocations.batchId, schema.batches.id))
+        .where(eq(schema.batches.status, "Active"));
+
+    return racks.map((r: any) => {
+        const layerUsages: Record<number, number> = {};
+        for (const loc of locs) {
+            if (loc.rackId === r.id) {
+                layerUsages[loc.layer] = (layerUsages[loc.layer] || 0) + loc.quantity;
+            }
+        }
+
+        // Also recalculate true currentUsage to be safe
+        const trueUsage = Object.values(layerUsages).reduce((a, b) => a + b, 0);
+
+        return {
+            ...r,
+            id: Number(r.id),
+            capacity: Number(r.capacity),
+            currentUsage: trueUsage,
+            width: Number(r.width),
+            height: Number(r.height),
+            totalLayers: Number(r.totalLayers),
+            lightIntensity: Number(r.lightIntensity),
+            x: Number(r.x),
+            y: Number(r.y),
+            layerUsages
+        };
+    });
 }
 
 export async function updateLayerColorService(db: any, rackId: number, layer: number, color: string) {

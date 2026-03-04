@@ -1,0 +1,141 @@
+# Frontend QA Testing Guide — Cordinal Mushrooms
+
+> **Before you start**: Open the app at [http://localhost:3000](http://localhost:3000) in your browser.
+> All tests below are manual browser tests — the app stores data in the browser's IndexedDB.
+
+---
+
+## ✅ 1. Dashboard
+
+| # | Action | Expected Result |
+|---|--------|----------------|
+| 1.1 | Navigate to `/` | Dashboard loads with two sections: "Fruiting / Incubation Room" and "Storage Room" |
+| 1.2 | Check each card shows a **Total** count | Total reflects real batch/inventory counts |
+| 1.3 | Create a batch 22+ days ago (use production page). Come back to dashboard | "To Harvest" badge appears in green |
+| 1.4 | Create a batch for Day 1 of a LC type | "To shake" count should appear in red if not shaken |
+| 1.5 | Add a Base Culture inventory item that is 160+ days old | "About to expire" appears in amber in Storage Room |
+| 1.6 | Resize browser to mobile (375px) | Cards stack single-column; all numbers visible without overflow |
+
+---
+
+## ✅ 2. Facility — Rack View
+
+### 2a. Rack Management
+| # | Action | Expected Result |
+|---|--------|----------------|
+| 2.1 | Navigate to `/facility` | All racks shown on the floor plan canvas |
+| 2.2 | Click **Add Rack** | Form opens; fill Name, Capacity, Layers → rack appears on canvas |
+| 2.3 | Drag a rack to a new position | Position persists on reload |
+| 2.4 | Toggle **Lights** switch on a rack | `lightStatus` updates; dashboard "In light/darkness" counts shift |
+| 2.5 | Click **Duplicate** | New rack appears with [(Copy)](file:///d:/myworks/Mushroom_Operations/hooks/use-production.ts#68-69) suffix, empty batches |
+| 2.6 | Delete a rack **with** active batches | Error: "Cannot delete rack with active batches" |
+| 2.7 | Delete a rack **without** active batches | Rack removed from canvas |
+
+### 2b. Layer Actions (inside Rack Detail dialog)
+| # | Action | Expected Result |
+|---|--------|----------------|
+| 2.8 | Click a rack → Rack Detail dialog opens | Shows all layers; occupied layers display batch name, type, jar count |
+| 2.9 | Coloured glow on a layer cell | 🔵 Blue = Put/Remove Cloth due, 🟡 Yellow = Switch Lights, 🟢 Green = Harvest ready, 🔴 Red = Discard, 🟣 Purple = Shake needed |
+
+### 2c. Batch Actions (per batch row in Rack Detail)
+| # | Action | Step | Expected Result |
+|---|--------|------|----------------|
+| 2.10 | **Shake** (LC batch, Day 0–5) | Click Shake button | Logs "Shake" action; shake count for the day increments; purple glow clears if 2/2 done |
+| 2.11 | **Mist** | Click Mist button on any batch | Logs "Mist" action; visible in History dialog |
+| 2.12 | **Put Cloth** | Click Put Cloth on a fresh batch | Logs "Put Cloth"; blue glow should appear when cloth-removal day approaches |
+| 2.13 | **Remove Cloth** | Click Remove Cloth on a batch that has cloth | Logs "Remove Cloth"; blue glow disappears from that layer |
+| 2.14 | **Harvest** (from rack view) | Click Harvest on a ready batch | Batch status → Harvested; inventory item created; layer clears; rack usage decreases |
+| 2.15 | **Discard Partial** | Enter quantity < jarCount in Discard dialog | Only that quantity is discarded; remaining jars stay in batch; a Waste item is added to inventory |
+| 2.16 | **Discard Full** | Discard all jars | Batch status → Discarded; layer clears; batch appears in Waste Management graveyard |
+| 2.17 | **Move Items** | Select source layer+qty → pick target rack+layer | `batchLocations` updated; source rack usage decreases; target rack usage increases |
+
+---
+
+## ✅ 3. Production — Active Production
+
+| # | Action | Expected Result |
+|---|--------|----------------|
+| 3.1 | Navigate to `/production` → "Active Production" tab | Table shows all non-Harvested/Discarded batches |
+| 3.2 | Click **New Batch** | Dialog opens with fields: Name, Type, Source, Start Date, Rack, Layer, Jar Count |
+| 3.3 | Fill in and submit a new batch | Batch appears in table; rack usage updates in Facility |
+| 3.4 | Click **Harvest** on a batch | Batch disappears from Active; reappears in Stored Items tab with source/location data |
+| 3.5 | Click **Discard** on a batch | Batch moves to Waste tab graveyard |
+| 3.6 | Click ✏️ edit on a batch | Edit dialog opens; change name/jar count and save → table updates |
+| 3.7 | Click **History** button | Dialog shows past actions (Shake/Mist) and Past Locations tab |
+| 3.8 | Click **Log Action** (Shake, Mist, etc.) | Action saved; appears in History dialog |
+
+---
+
+## ✅ 4. Production — Stored Items
+
+| # | Action | Expected Result |
+|---|--------|----------------|
+| 4.1 | Switch to "Stored Items" tab | Table shows: Batch ID, Name, Type, Qty, Unit, Source, Past Location, Batch Start Date, Date Added, History |
+| 4.2 | Verify Batch ID shows `#<number>` for harvested items | Correct ID from originating batch |
+| 4.3 | Verify Source column | Shows `sourceId` from the batch (e.g. "Master-LC-001") |
+| 4.4 | Verify Past Location | Shows rack name + layer (e.g. "Rack A / L3") |
+| 4.5 | Click **History** on a stored item | BatchHistoryDialog opens with Actions + Past Locations tabs |
+| 4.6 | Manually-added inventory items | Source, Batch ID, Past Location all show `—` |
+
+---
+
+## ✅ 5. Production — Waste Management
+
+| # | Action | Expected Result |
+|---|--------|----------------|
+| 5.1 | Switch to "Waste" tab | Two sections: "Discarded Batches (Graveyard)" and "Inventory Waste" |
+| 5.2 | Discarded Batches table columns | Batch ID, Source, Type, Batch Start Date, Discarded Date, Jars, Status |
+| 5.3 | Verify Discarded Date | Shows the date the batch was discarded (not creation date) |
+| 5.4 | Inventory Waste table columns | Item Name, Source, Type, Batch Start Date, Discarded Date, Quantity, Status |
+| 5.5 | Click **History** on a waste item with a linked batch | Dialog opens with correct action history |
+
+---
+
+## ✅ 6. Inventory
+
+| # | Action | Expected Result |
+|---|--------|----------------|
+| 6.1 | Navigate to `/inventory` | Shows Fruiting Batches section and Stored Items section |
+| 6.2 | Click **Add Item** | Dialog opens with Name, Type, Quantity, Unit, Preserved checkbox |
+| 6.3 | Add a Liquid-Culture item | Appears in Stored Items table |
+| 6.4 | Add same item (same Name+Type+Preserved) again | Quantity stacks (merges into same row) |
+| 6.5 | Edit item quantity | Quantity updates in table |
+| 6.6 | Delete an item | Item removed from table |
+| 6.7 | Check **Source** column for harvested items | Shows the culture source (e.g. "Master-LC-001") |
+| 6.8 | Check **Date Added to Storage** column | Shows the `createdAt` date of the inventory record |
+| 6.9 | Use the search box | Filters by item name in real-time |
+| 6.10 | Convert a Fresh jar to Dried | Jar qty decreases by 1; a Dried row appears/increments |
+
+---
+
+## ✅ 7. Settings
+
+| # | Action | Expected Result |
+|---|--------|----------------|
+| 7.1 | Navigate to `/settings` | Room dimensions and shake times visible |
+| 7.2 | Update room width/height | Values persist on reload |
+| 7.3 | Update shake morning/evening time | Times persist; LC shake alerts use these thresholds |
+| 7.4 | Trigger **Export DB** | Browser downloads a `.sqlite` file |
+| 7.5 | Trigger **Import DB** | Loads a previously exported `.sqlite` and refreshes all data |
+| 7.6 | Change app theme | Theme persists on reload (light/dark/nature/cordyceps/midnight) |
+
+---
+
+## ⚠️ Known Behaviors (Not Bugs)
+
+| Behavior | Explanation |
+|----------|-------------|
+| Harvesting same batch type twice merges inventory | [harvestBatchService](file:///d:/myworks/Mushroom_Operations/lib/services/production.ts#100-166) accumulates into an existing row by Name+Type |
+| Past Location shows primary rack only for harvested batches | `batchLocations` are cleared on harvest; only the original rack/layer is shown |
+| Discarded Date may show wrong date for old batches | `updatedAt` was not stamped before discarding — only new discards are accurate |
+| Dashboard counts use the **Node.js [sqlite.db](file:///d:/myworks/Mushroom_Operations/sqlite.db)** if running scripts, but browser uses IndexedDB | These are separate databases; scripts are for testing service logic, browser is production |
+
+---
+
+## 🔁 Re-running Backend Tests
+
+```bash
+npx tsx scripts/run-all-tests.ts
+```
+
+All 38 tests should pass. Tests automatically seed and clean up their own data.

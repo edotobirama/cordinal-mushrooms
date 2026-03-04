@@ -39,6 +39,27 @@ export async function deleteInventoryItemService(db: any, id: number) {
     await db.delete(schema.inventoryItems).where(eq(schema.inventoryItems.id, id));
 }
 
+/** Mark an inventory item as Waste (moves it to the Inventory Waste section) */
+export async function discardInventoryItemService(db: any, id: number) {
+    await db.update(schema.inventoryItems)
+        .set({ type: "Waste", notes: `Discarded on ${new Date().toLocaleDateString()}` })
+        .where(eq(schema.inventoryItems.id, id));
+}
+
+/** Permanently delete a discarded batch record (and its actions/locations) */
+export async function permanentlyDeleteBatchService(db: any, batchId: number) {
+    await db.delete(schema.batchActions).where(eq(schema.batchActions.batchId, batchId));
+    await db.delete(schema.batchLocations).where(eq(schema.batchLocations.batchId, batchId));
+    await db.delete(schema.inventoryItems).where(eq(schema.inventoryItems.batchId, batchId));
+    await db.delete(schema.batches).where(eq(schema.batches.id, batchId));
+}
+
+/** Permanently delete a waste inventory item */
+export async function permanentlyDeleteWasteItemService(db: any, id: number) {
+    await db.delete(schema.inventoryItems).where(eq(schema.inventoryItems.id, id));
+}
+
+
 export async function addMaterialService(db: any, params: { name: string; quantity: number; unit: string; lowStockThreshold: number }) {
     await db.insert(schema.materials).values({
         name: params.name,

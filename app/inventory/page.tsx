@@ -12,7 +12,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { desc, eq, sql, not, inArray } from "drizzle-orm";
+import { desc, eq, sql, not, inArray, isNull } from "drizzle-orm";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, Package, Loader2, Search } from "lucide-react";
@@ -45,8 +45,21 @@ export default function InventoryPage() {
 
             setFruitingBatches(fruiting);
 
-            // 2. Fetch Stored Items
-            const stored = await db.select().from(schema.inventoryItems);
+            // 2. Fetch Stored Items (joined with batches for source name)
+            const stored = await db.select({
+                id: schema.inventoryItems.id,
+                name: schema.inventoryItems.name,
+                type: schema.inventoryItems.type,
+                quantity: schema.inventoryItems.quantity,
+                unit: schema.inventoryItems.unit,
+                batchId: schema.inventoryItems.batchId,
+                isPreserved: schema.inventoryItems.isPreserved,
+                notes: schema.inventoryItems.notes,
+                createdAt: schema.inventoryItems.createdAt,
+                sourceName: schema.batches.sourceId,
+            })
+                .from(schema.inventoryItems)
+                .leftJoin(schema.batches, eq(schema.inventoryItems.batchId, schema.batches.id));
             setStoredItems(stored.sort((a: any, b: any) => b.id - a.id));
 
             // 3. Stats Logic
@@ -188,7 +201,8 @@ export default function InventoryPage() {
                                 <TableHead>Type</TableHead>
                                 <TableHead>Quantity</TableHead>
                                 <TableHead>Unit</TableHead>
-                                <TableHead>Created Date</TableHead>
+                                <TableHead>Source</TableHead>
+                                <TableHead>Date Added to Storage</TableHead>
                                 <TableHead className="w-[80px]">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -210,15 +224,16 @@ export default function InventoryPage() {
                                     </TableCell>
                                     <TableCell>{item.quantity}</TableCell>
                                     <TableCell>{item.unit}</TableCell>
+                                    <TableCell className="text-muted-foreground">{item.sourceName || "—"}</TableCell>
                                     <TableCell>{format(new Date(item.createdAt), "PPP")}</TableCell>
                                     <TableCell>
-                                        <InventoryActions itemId={item.id} itemName={item.name} itemType={item.type} onSuccess={refreshData} />
+                                        <InventoryActions itemId={item.id} itemName={item.name} itemType={item.type} currentQuantity={item.quantity} onSuccess={refreshData} />
                                     </TableCell>
                                 </TableRow>
                             ))}
                             {filteredStoredItems.length === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">
+                                    <TableCell colSpan={8} className="text-center h-24 text-muted-foreground">
                                         {searchQuery ? "No matching items found." : "No items in storage. Harvest batches to add stock."}
                                     </TableCell>
                                 </TableRow>

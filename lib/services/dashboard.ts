@@ -243,12 +243,22 @@ export async function getRecentActivityService(db: any) {
 
 export async function getPendingActionCountsService(db: any) {
     const activeBatches = await db.select({
+        id: schema.batches.id,
         startDate: schema.batches.startDate,
         type: schema.batches.type,
         jarCount: schema.batches.jarCount,
     })
         .from(schema.batches)
         .where(not(inArray(schema.batches.status, ["Harvested", "Discarded"])));
+
+    // Determine which batches have already had cloth removed
+    const removeClothActions = await db.select({
+        batchId: schema.batchActions.batchId
+    })
+        .from(schema.batchActions)
+        .where(eq(schema.batchActions.actionType, "Remove Cloth"));
+
+    const batchesWithoutCloth = new Set(removeClothActions.map((a: any) => a.batchId));
 
     const today = new Date();
     let removeClothJars = 0;
@@ -258,19 +268,20 @@ export async function getPendingActionCountsService(db: any) {
     for (const batch of activeBatches) {
         const start = parseISO(batch.startDate);
         const daysDiff = differenceInCalendarDays(today, start);
+        const hasCloth = !batchesWithoutCloth.has(batch.id);
 
         if (batch.type === 'Liquid Culture') {
-            if (daysDiff === 20) {
+            if (daysDiff >= 20 && hasCloth) {
                 removeClothJars += batch.jarCount;
-            } else if (daysDiff > 20 && daysDiff <= 22) {
+            } else if (daysDiff >= 20 && daysDiff <= 22) {
                 switchLightsJars += batch.jarCount;
             } else if (daysDiff >= 22) {
                 harvestReadyJars += batch.jarCount;
             }
         } else {
-            if (daysDiff === 14) {
+            if (daysDiff >= 13 && hasCloth) {
                 removeClothJars += batch.jarCount;
-            } else if (daysDiff === 16) {
+            } else if (daysDiff >= 16) {
                 switchLightsJars += batch.jarCount;
             } else if (daysDiff >= 60 && daysDiff < 65) {
                 harvestReadyJars += batch.jarCount;
@@ -446,6 +457,15 @@ export async function getFacilityActionMapService(db: any) {
         return acc;
     }, {});
 
+    // Fetch Remove Cloth actions to determine true hasCloth state
+    const removeClothActions = await db.select({
+        batchId: schema.batchActions.batchId
+    })
+        .from(schema.batchActions)
+        .where(eq(schema.batchActions.actionType, "Remove Cloth"));
+
+    const batchesWithoutCloth = new Set(removeClothActions.map((a: any) => a.batchId));
+
     for (const batch of activeBatches) {
         if (!batch.rackId) continue;
 
@@ -456,17 +476,20 @@ export async function getFacilityActionMapService(db: any) {
 
         let requiredActionColor = null;
 
+        const hasCloth = !batchesWithoutCloth.has(batch.id);
+
         if (batch.type === 'Base Culture') {
             if (age >= 23 || age > 60) requiredActionColor = 'red'; // Discard
             else if (age >= 18 && age < 23) requiredActionColor = 'green'; // Harvest
         }
         else if (batch.type === 'Liquid Culture') {
             if (batchesNeedingShake.has(batch.id)) requiredActionColor = 'purple'; // Shake
+            else if (age >= 20 && hasCloth) requiredActionColor = 'blue'; // Priority: Remove Cloth
             else if (age >= 20 && inDarkness) requiredActionColor = 'yellow'; // Light On
             else if (age >= 22) requiredActionColor = 'green'; // Harvest
         }
-        else if (batch.type === 'Jars' || batch.type === 'Spawn' || batch.type === 'Grain') {
-            if (age === 14) requiredActionColor = 'blue'; // Remove Cloth
+        else if (batch.type === 'Jars' || batch.type === 'Spawn' || batch.type === 'Grain' || batch.type === 'Basal Medium') {
+            if (age >= 13 && hasCloth) requiredActionColor = 'blue'; // Remove Cloth
             else if (age >= 16 && inDarkness) requiredActionColor = 'yellow'; // Light On
             else if (age >= 60) requiredActionColor = 'green'; // Harvest
         }

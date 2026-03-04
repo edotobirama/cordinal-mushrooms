@@ -57,7 +57,7 @@ export function LayerDetailsDialog({ open, onOpenChange, layerNumber, rack, onUp
     const [selectedJars, setSelectedJars] = useState<Set<string>>(new Set());
     const [selectionMode, setSelectionMode] = useState<'harvest' | 'discard' | 'cloth' | 'no-cloth' | 'move' | 'shake' | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
-    const { harvestBatch, discardBatch, logBatchAction } = useProduction();
+    const { harvestBatch, discardBatch, discardPartialBatch, logBatchAction } = useProduction();
     const { updateLayerColor } = useFacility();
     const { actionMap } = useFacilityData();
 
@@ -128,17 +128,21 @@ export function LayerDetailsDialog({ open, onOpenChange, layerNumber, rack, onUp
         setIsProcessing(true);
         try {
             // Group by Batch
-            const batchIds = new Set<number>();
+            const batchJars = new Map<number, string[]>();
             selectedJars.forEach(jarId => {
                 const batchId = parseInt(jarId.split('-')[0]);
-                batchIds.add(batchId);
+                if (!batchJars.has(batchId)) batchJars.set(batchId, []);
+                batchJars.get(batchId)!.push(jarId);
             });
 
-            for (const batchId of Array.from(batchIds)) {
+            for (const [batchId, jars] of Array.from(batchJars.entries())) {
                 if (selectionMode === 'harvest') {
+                    // For now harvest still harvests whole batch (per original logic) unless specifically requested otherwise
                     await harvestBatch(batchId);
                 } else if (selectionMode === 'discard') {
-                    await discardBatch(batchId);
+                    // Calculate exactly how many jars to discard from this layer
+                    const quantity = jars.length;
+                    await discardPartialBatch(batchId, rack.id, layerNumber!, quantity);
                 } else if (selectionMode === 'shake') {
                     await logBatchAction(batchId, 'Shake');
                 } else if (selectionMode === 'cloth') {
@@ -150,6 +154,7 @@ export function LayerDetailsDialog({ open, onOpenChange, layerNumber, rack, onUp
 
             setSelectionMode(null);
             setSelectedJars(new Set());
+            setSelectedJar(null);
             handleSuccess();
         } catch (error) {
             console.error("Failed to process action", error);
@@ -210,6 +215,7 @@ export function LayerDetailsDialog({ open, onOpenChange, layerNumber, rack, onUp
                 if (!open) {
                     setSelectionMode(null);
                     setSelectedJars(new Set());
+                    setSelectedJar(null);
                 }
                 onOpenChange(open);
             }}>
