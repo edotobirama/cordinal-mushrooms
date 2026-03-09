@@ -24,6 +24,7 @@ function FacilityContent() {
     const { racks: allRacks, settings, actionMap, isLoading, refresh } = useFacilityData();
     const { updateRackLightStatus } = useFacility();
     const [activeFilter, setActiveFilter] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState<string>("grid");
 
     const getRackGlowColor = (rackId: number) => {
         const rackActions = actionMap?.[rackId];
@@ -42,6 +43,7 @@ function FacilityContent() {
         if (colors.has('green')) return 'shadow-[0_0_15px_rgba(34,197,94,0.6)] border-green-500';
         if (colors.has('blue')) return 'shadow-[0_0_15px_rgba(59,130,246,0.6)] border-blue-500';
         if (colors.has('yellow')) return 'shadow-[0_0_15px_rgba(234,179,8,0.6)] border-yellow-500';
+        if (colors.has('orange')) return 'shadow-[0_0_15px_rgba(249,115,22,0.6)] border-orange-500';
         if (colors.has('purple')) return 'shadow-[0_0_15px_rgba(168,85,247,0.6)] border-purple-500';
 
         return null;
@@ -56,7 +58,7 @@ function FacilityContent() {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="flex flex-col gap-6 pb-8">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Facility</h1>
@@ -70,7 +72,7 @@ function FacilityContent() {
                 </div>
             </div>
 
-            <Tabs defaultValue="grid" className="space-y-4">
+            <Tabs defaultValue="grid" className="space-y-4" value={activeTab} onValueChange={setActiveTab} style={{ gridColumn: '1/-1' }}>
                 <TabsList>
                     <TabsTrigger value="grid">
                         <LayoutGrid className="w-4 h-4 mr-2" />
@@ -82,8 +84,8 @@ function FacilityContent() {
                     </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="grid" className="space-y-4">
-                    <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
+                <TabsContent value="grid" className="space-y-4 pb-8">
+                    <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', alignContent: 'start', alignItems: 'start' }}>
                         {allRacks.map((rack) => {
                             const glowClass = getRackGlowColor(rack.id);
                             return (
@@ -141,14 +143,18 @@ function FacilityContent() {
                 </TabsContent>
 
 
-                <TabsContent value="blueprint" className="overflow-auto space-y-4">
-                    <FacilityLegend activeFilter={activeFilter} onFilterChange={setActiveFilter} />
-                    <BlueprintEditor
-                        racks={allRacks}
-                        roomWidth={settings?.roomWidth || 20}
-                        roomHeight={settings?.roomHeight || 15}
-                        activeFilter={activeFilter}
-                    />
+                <TabsContent value="blueprint" className="overflow-hidden space-y-4">
+                    {activeTab === 'blueprint' && (
+                        <>
+                            <FacilityLegend activeFilter={activeFilter} onFilterChange={setActiveFilter} />
+                            <BlueprintEditor
+                                racks={allRacks}
+                                roomWidth={settings?.roomWidth || 20}
+                                roomHeight={settings?.roomHeight || 15}
+                                activeFilter={activeFilter}
+                            />
+                        </>
+                    )}
                 </TabsContent>
             </Tabs>
         </div>

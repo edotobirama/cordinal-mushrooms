@@ -8,6 +8,7 @@ import {
     discardInventoryItemService,
     permanentlyDeleteBatchService,
     permanentlyDeleteWasteItemService,
+    updateInventoryItemNotesService,
     addMaterialService,
     updateStockService,
     deleteMaterialService,
@@ -114,9 +115,15 @@ export function useInventory() {
         await saveDatabase();
     }, [db]);
 
+    const updateInventoryItemNotes = useCallback(async (id: number, notes: string) => {
+        if (!db) return;
+        await updateInventoryItemNotesService(db, id, notes);
+        await saveDatabase();
+    }, [db]);
+
     return {
         addToInventory, updateInventoryItem, deleteInventoryItem, discardInventoryItem,
-        permanentlyDeleteBatch, permanentlyDeleteWasteItem,
+        permanentlyDeleteBatch, permanentlyDeleteWasteItem, updateInventoryItemNotes,
         addMaterial, updateStock, deleteMaterial, performDailyCheck, getInventoryItemsByType,
         convertToDried
     };

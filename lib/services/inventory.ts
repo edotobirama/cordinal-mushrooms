@@ -59,6 +59,13 @@ export async function permanentlyDeleteWasteItemService(db: any, id: number) {
     await db.delete(schema.inventoryItems).where(eq(schema.inventoryItems.id, id));
 }
 
+/** Update only the notes field on an inventory item */
+export async function updateInventoryItemNotesService(db: any, id: number, notes: string) {
+    await db.update(schema.inventoryItems)
+        .set({ notes })
+        .where(eq(schema.inventoryItems.id, id));
+}
+
 
 export async function addMaterialService(db: any, params: { name: string; quantity: number; unit: string; lowStockThreshold: number }) {
     await db.insert(schema.materials).values({

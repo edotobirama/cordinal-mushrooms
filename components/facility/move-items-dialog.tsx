@@ -58,29 +58,35 @@ export function MoveItemsDialog({ open, onOpenChange, selectedItems, onSuccess, 
         if (!targetRackId || !targetLayer) return;
         setIsLoading(true);
         try {
-            // Validate layer capacity before moving
-            const totalMovingCount = selectedItems.reduce((acc, item) => acc + item.count, 0);
+            // Validate layer
             const rack = racks.find(r => r.id.toString() === targetRackId);
+            if (!rack) {
+                setIsLoading(false);
+                alert("Target rack not found.");
+                return;
+            }
 
-            if (rack) {
-                const maxLayers = rack.totalLayers || 7;
-                const layerCapacity = Math.floor(rack.capacity / maxLayers);
-                // Note: layerUsages requires the Rack interface to include it, and for getAllRacks to provide it
-                const currentLayerUsage = (rack as any).layerUsages?.[Number(targetLayer)] || 0;
+            // Calculate total items being moved
+            const totalMovingCount = selectedItems.reduce((acc, item) => acc + item.count, 0);
 
-                // Allow moving within the same layer without capacity penalty
-                let actualAdditionalCount = totalMovingCount;
-                for (const item of selectedItems) {
-                    if (item.sourceRackId === Number(targetRackId) && item.sourceLayer === Number(targetLayer)) {
-                        actualAdditionalCount -= item.count;
-                    }
-                }
+            // Calculate items that are *new* to the target rack (i.e., not already in this rack)
+            const itemsMovingIntoNewRack = selectedItems.filter(item => item.sourceRackId !== Number(targetRackId)).reduce((sum, item) => sum + item.count, 0);
 
-                if (actualAdditionalCount + currentLayerUsage > layerCapacity) {
-                    setIsLoading(false);
-                    alert(`Not enough capacity on ${rack.name} Layer ${targetLayer}.\nIt can hold ${layerCapacity} items total, and ${currentLayerUsage} are already used.\nYou are trying to add ${actualAdditionalCount} more.`);
-                    return;
-                }
+            // Calculate items that are moving within the same rack but to a different layer
+            const itemsMovingWithinSameRackDifferentLayer = selectedItems.filter(item =>
+                item.sourceRackId === Number(targetRackId) && item.sourceLayer !== Number(targetLayer)
+            ).reduce((sum, item) => sum + item.count, 0);
+
+            // The effective additional count for the target rack's total capacity is items moving into it from other racks.
+            // Items moving within the same rack don't change the *total* rack usage, only layer usage.
+            const effectiveAdditionalCountForRackCapacity = itemsMovingIntoNewRack;
+
+            const rackRemainingCapacity = rack.capacity - rack.currentUsage;
+
+            if (effectiveAdditionalCountForRackCapacity > rackRemainingCapacity) {
+                setIsLoading(false);
+                alert(`Not enough global capacity on ${rack.name}.\nYou are trying to move ${effectiveAdditionalCountForRackCapacity} new jars into this rack, but it only has ${rackRemainingCapacity} open slots remaining overall.`);
+                return;
             }
 
             const itemsToMove = selectedItems.map(item => ({
@@ -142,11 +148,24 @@ export function MoveItemsDialog({ open, onOpenChange, selectedItems, onSuccess, 
                                     <SelectValue placeholder="Select Layer" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {selectedRack ? Array.from({ length: selectedRack.totalLayers }).map((_, i) => (
-                                        <SelectItem key={i + 1} value={(i + 1).toString()}>
-                                            Layer {i + 1}
-                                        </SelectItem>
-                                    )) : null}
+                                    {selectedRack ? Array.from({ length: selectedRack.totalLayers || 7 }).map((_, i) => {
+                                        const layerNum = i + 1;
+                                        const usage = (selectedRack as any).layerUsages?.[layerNum] || 0;
+
+                                        const info = (selectedRack as any).layerInfo?.[layerNum];
+                                        let lightStatus = "Off";
+                                        if (info) {
+                                            if (info.light1 && info.light2) lightStatus = "1 & 2 On";
+                                            else if (info.light1) lightStatus = "1 On";
+                                            else if (info.light2) lightStatus = "2 On";
+                                        }
+
+                                        return (
+                                            <SelectItem key={layerNum} value={layerNum.toString()}>
+                                                Layer {layerNum} ({usage} Used, L: {lightStatus})
+                                            </SelectItem>
+                                        );
+                                    }) : null}
                                 </SelectContent>
                             </Select>
                         </div>

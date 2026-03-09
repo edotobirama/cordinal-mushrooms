@@ -12,6 +12,7 @@ import {
     moveBatchItemsService,
     getAllRacksService,
     updateLayerColorService,
+    updateLayerLightsService,
     updateRackLayerCountService,
     getRackDetailsService,
     repairRackUsageService,
@@ -124,6 +125,12 @@ export function useFacility() {
         await saveDatabase();
     }, [db]);
 
+    const updateLayerLights = useCallback(async (rackId: number, layer: number, light1: boolean, light2: boolean) => {
+        if (!db) return;
+        await updateLayerLightsService(db, rackId, layer, light1, light2);
+        await saveDatabase();
+    }, [db]);
+
     const updateRackLayerCount = useCallback(async (rackId: number, increment: number) => {
         if (!db) return;
         await updateRackLayerCountService(db, rackId, increment);
@@ -148,7 +155,7 @@ export function useFacility() {
         addRack, updateRack, deleteRack, duplicateRack,
         moveBatchItems, getAllRacks,
         getFacilitySettings, updateFacilitySettings,
-        updateLayerColor, updateRackLayerCount, getRackDetails,
+        updateLayerColor, updateLayerLights, updateRackLayerCount, getRackDetails,
         updateRackPositions, updateRackLightStatus,
         repairRackUsage
     };

@@ -78,6 +78,7 @@ function DraggableRack({ rack, style, mode, onSelect, activeFilter }: { rack: Ra
         if (activeFilter === 'purple') filterGlowClass = "ring-4 ring-offset-1 ring-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.8)] z-20 scale-[1.02] border-purple-500";
         if (activeFilter === 'green') filterGlowClass = "ring-4 ring-offset-1 ring-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.8)] z-20 scale-[1.02] border-emerald-500";
         if (activeFilter === 'yellow') filterGlowClass = "ring-4 ring-offset-1 ring-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.8)] z-20 scale-[1.02] border-amber-500";
+        if (activeFilter === 'orange') filterGlowClass = "ring-4 ring-offset-1 ring-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.8)] z-20 scale-[1.02] border-orange-500";
         if (activeFilter === 'blue') filterGlowClass = "ring-4 ring-offset-1 ring-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.8)] z-20 scale-[1.02] border-blue-500";
     }
 

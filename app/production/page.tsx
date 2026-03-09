@@ -7,6 +7,7 @@ import * as schema from "@/lib/db/schema";
 import { NewBatchDialog } from "@/components/production/new-batch-dialog";
 import { ProductionActions } from "@/components/production/production-actions";
 import { BatchHistoryDialog } from "@/components/production/batch-history-dialog";
+import { NotesDialog } from "@/components/production/notes-dialog";
 import {
     Table,
     TableBody,
@@ -34,7 +35,7 @@ import { Button } from "@/components/ui/button";
 export default function ProductionPage() {
     const { db } = useDb();
     const { updateBatchNotes } = useProduction();
-    const { permanentlyDeleteBatch, permanentlyDeleteWasteItem } = useInventory();
+    const { permanentlyDeleteBatch, permanentlyDeleteWasteItem, updateInventoryItemNotes } = useInventory();
     const [loading, setLoading] = useState(true);
     const [activeBatches, setActiveBatches] = useState<any[]>([]);
     const [discardedBatches, setDiscardedBatches] = useState<any[]>([]);
@@ -78,6 +79,7 @@ export default function ProductionPage() {
                 startDate: schema.batches.startDate,
                 stage: schema.batches.stage,
                 sourceId: schema.batches.sourceId,
+                notes: schema.batches.notes,
                 discardedAt: schema.batches.updatedAt,
             })
                 .from(schema.batches)
@@ -109,6 +111,7 @@ export default function ProductionPage() {
                 quantity: schema.inventoryItems.quantity,
                 unit: schema.inventoryItems.unit,
                 batchId: schema.inventoryItems.batchId,
+                notes: schema.inventoryItems.notes,
                 createdAt: schema.inventoryItems.createdAt,
                 sourceName: schema.batches.sourceId,
                 batchStartDate: schema.batches.startDate,
@@ -270,15 +273,10 @@ export default function ProductionPage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                <input
-                                                    className="w-full bg-transparent border-b border-transparent hover:border-border focus:border-primary focus:outline-none transition-colors text-sm py-1"
-                                                    defaultValue={batch.notes || ""}
-                                                    placeholder="Add note..."
-                                                    onBlur={(e) => {
-                                                        if (e.target.value !== (batch.notes || "")) {
-                                                            updateBatchNotes(batch.id, e.target.value);
-                                                        }
-                                                    }}
+                                                <NotesDialog
+                                                    currentNotes={batch.notes || ""}
+                                                    itemName={batch.name}
+                                                    onSave={(notes) => updateBatchNotes(batch.id, notes)}
                                                 />
                                             </TableCell>
                                         </TableRow>
@@ -315,6 +313,7 @@ export default function ProductionPage() {
                                     <TableHead>Past Location</TableHead>
                                     <TableHead>Batch Start Date</TableHead>
                                     <TableHead>Date Added to Storage</TableHead>
+                                    <TableHead>Notes</TableHead>
                                     <TableHead className="w-[100px]">History</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -339,6 +338,13 @@ export default function ProductionPage() {
                                         <TableCell>{item.batchStartDate ? format(parseISO(item.batchStartDate), 'MMM d, yyyy') : "—"}</TableCell>
                                         <TableCell>{format(new Date(item.createdAt), 'MMM d, yyyy')}</TableCell>
                                         <TableCell>
+                                            <NotesDialog
+                                                currentNotes={item.notes || ""}
+                                                itemName={item.name}
+                                                onSave={(notes) => updateInventoryItemNotes(item.id, notes)}
+                                            />
+                                        </TableCell>
+                                        <TableCell>
                                             {item.batchId && item.batchStartDate ? (
                                                 <BatchHistoryDialog
                                                     batchId={item.batchId}
@@ -354,7 +360,7 @@ export default function ProductionPage() {
                                 ))}
                                 {storedItems.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={10} className="text-center h-24 text-muted-foreground">
+                                        <TableCell colSpan={11} className="text-center h-24 text-muted-foreground">
                                             No stored items yet. Harvest batches to populate inventory.
                                         </TableCell>
                                     </TableRow>
@@ -381,6 +387,7 @@ export default function ProductionPage() {
                                     <TableHead>Discarded Date</TableHead>
                                     <TableHead>Jars</TableHead>
                                     <TableHead>Status</TableHead>
+                                    <TableHead>Notes</TableHead>
                                     <TableHead className="w-[100px] text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -395,6 +402,13 @@ export default function ProductionPage() {
                                         <TableCell>{batch.jarCount}</TableCell>
                                         <TableCell>
                                             <Badge variant="destructive" className="bg-red-500">Discarded</Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            <NotesDialog
+                                                currentNotes={batch.notes || ""}
+                                                itemName={batch.name}
+                                                onSave={(notes) => updateBatchNotes(batch.id, notes)}
+                                            />
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center justify-end gap-1">
@@ -441,6 +455,7 @@ export default function ProductionPage() {
                                         <TableHead>Discarded Date</TableHead>
                                         <TableHead>Quantity</TableHead>
                                         <TableHead>Status</TableHead>
+                                        <TableHead>Notes</TableHead>
                                         <TableHead className="w-[80px] text-right">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -455,6 +470,13 @@ export default function ProductionPage() {
                                             <TableCell>{item.quantity} {item.unit}</TableCell>
                                             <TableCell>
                                                 <Badge className="bg-orange-500 text-white">Waste</Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <NotesDialog
+                                                    currentNotes={item.notes || ""}
+                                                    itemName={item.name}
+                                                    onSave={(notes) => updateInventoryItemNotes(item.id, notes)}
+                                                />
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center justify-end gap-1">

@@ -147,7 +147,7 @@ export async function harvestBatchService(db: any, batchId: number) {
 
     if (existingItem) {
         await db.update(schema.inventoryItems)
-            .set({ quantity: sql`${schema.inventoryItems.quantity} + ${finalQuantity}` })
+            .set({ quantity: sql`${schema.inventoryItems.quantity} + ${finalQuantity}`, notes: batch.notes || existingItem.notes || null })
             .where(eq(schema.inventoryItems.id, existingItem.id));
     } else {
         await db.insert(schema.inventoryItems).values({
@@ -155,7 +155,8 @@ export async function harvestBatchService(db: any, batchId: number) {
             type: inventoryType,
             quantity: finalQuantity,
             unit: unit,
-            batchId: batch.id
+            batchId: batch.id,
+            notes: batch.notes || null
         });
     }
 

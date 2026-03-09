@@ -58,7 +58,7 @@ export function LayerDetailsDialog({ open, onOpenChange, layerNumber, rack, onUp
     const [selectionMode, setSelectionMode] = useState<'harvest' | 'discard' | 'cloth' | 'no-cloth' | 'move' | 'shake' | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const { harvestBatch, discardBatch, discardPartialBatch, logBatchAction } = useProduction();
-    const { updateLayerColor } = useFacility();
+    const { updateLayerColor, updateLayerLights } = useFacility();
     const { actionMap } = useFacilityData();
 
     const isCement = rack.material === "Cement";
@@ -226,28 +226,45 @@ export function LayerDetailsDialog({ open, onOpenChange, layerNumber, rack, onUp
                                 <DialogTitle className="flex items-center gap-2">
                                     {rack.name} - Layer {layerNumber}
                                     {(() => {
-                                        const layerColor = rack.layers?.find(l => l.layer === layerNumber)?.color || "Off";
-                                        const isLightOn = layerColor !== 'Off' && layerColor !== 'None';
+                                        const layerInfo = rack.layers?.find(l => l.layer === layerNumber) as any;
+
+                                        const isLight1On = layerInfo?.light1 || false;
+                                        const isLight2On = layerInfo?.light2 || false;
 
                                         return (
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                className={cn(
-                                                    "ml-2 h-6 text-xs gap-1 transition-all",
-                                                    isLightOn ? "bg-yellow-100 text-yellow-700 border-yellow-300 hover:bg-yellow-200" : "text-muted-foreground"
-                                                )}
-                                                onClick={async () => {
-                                                    const newColor = isLightOn ? "Off" : "White";
-                                                    // Dynamic import to avoid cycle if possible, or just import at top
-                                                    // const { updateLayerColor } = await import("@/app/facility/actions");
-                                                    await updateLayerColor(rack.id, layerNumber!, newColor);
-                                                    onUpdate?.();
-                                                }}
-                                            >
-                                                <div className={cn("w-2 h-2 rounded-full", isLightOn ? "bg-yellow-500 animate-pulse" : "bg-stone-300")} />
-                                                {isLightOn ? "Light ON" : "Light OFF"}
-                                            </Button>
+                                            <div className="flex gap-2 ml-2">
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className={cn(
+                                                        "h-6 text-xs gap-1 transition-all",
+                                                        isLight1On ? "bg-amber-100 text-amber-700 border-amber-300 hover:bg-amber-200" : "text-muted-foreground"
+                                                    )}
+                                                    onClick={async () => {
+                                                        await updateLayerLights(rack.id, layerNumber!, !isLight1On, isLight2On);
+                                                        onUpdate?.();
+                                                    }}
+                                                >
+                                                    <div className={cn("w-2 h-2 rounded-full", isLight1On ? "bg-amber-500 animate-pulse" : "bg-stone-300")} />
+                                                    {isLight1On ? "Light 1 ON" : "Light 1 OFF"}
+                                                </Button>
+
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className={cn(
+                                                        "h-6 text-xs gap-1 transition-all",
+                                                        isLight2On ? "bg-amber-100 text-amber-700 border-amber-300 hover:bg-amber-200" : "text-muted-foreground"
+                                                    )}
+                                                    onClick={async () => {
+                                                        await updateLayerLights(rack.id, layerNumber!, isLight1On, !isLight2On);
+                                                        onUpdate?.();
+                                                    }}
+                                                >
+                                                    <div className={cn("w-2 h-2 rounded-full", isLight2On ? "bg-amber-500 animate-pulse" : "bg-stone-300")} />
+                                                    {isLight2On ? "Light 2 ON" : "Light 2 OFF"}
+                                                </Button>
+                                            </div>
                                         );
                                     })()}
                                 </DialogTitle>

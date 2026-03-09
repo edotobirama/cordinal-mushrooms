@@ -16,6 +16,7 @@ export function TimelineSettings() {
     const [removeClothDay, setRemoveClothDay] = useState<number>(14);
     const [light1Day, setLight1Day] = useState<number>(15);
     const [light2Day, setLight2Day] = useState<number>(17);
+    const [harvestDay, setHarvestDay] = useState<number>(60);
     const [loading, setLoading] = useState(false);
     const [saved, setSaved] = useState(false);
 
@@ -24,6 +25,7 @@ export function TimelineSettings() {
             setRemoveClothDay(settings.removeClothDay ?? 14);
             setLight1Day(settings.light1Day ?? 15);
             setLight2Day(settings.light2Day ?? 17);
+            setHarvestDay(settings.harvestDay ?? 60);
         }
     }, [settings]);
 
@@ -34,7 +36,8 @@ export function TimelineSettings() {
         const payload = {
             removeClothDay,
             light1Day,
-            light2Day
+            light2Day,
+            harvestDay
         };
         await updateFacilitySettings(payload);
         await refresh();
@@ -87,6 +90,17 @@ export function TimelineSettings() {
                                 min={1}
                                 value={light2Day}
                                 onChange={(e) => setLight2Day(Number(e.target.value))}
+                                required
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="harvestDay">Harvest Trigger (Day)</Label>
+                            <Input
+                                id="harvestDay"
+                                type="number"
+                                min={1}
+                                value={harvestDay}
+                                onChange={(e) => setHarvestDay(Number(e.target.value))}
                                 required
                             />
                         </div>

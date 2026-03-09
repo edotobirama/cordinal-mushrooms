@@ -9,7 +9,8 @@ const legendItems = [
     { id: "red", label: "Discard", bgColor: "bg-red-500", hoverColor: "hover:bg-red-600", textColor: "text-white" },
     { id: "purple", label: "Shake", bgColor: "bg-purple-500", hoverColor: "hover:bg-purple-600", textColor: "text-white" },
     { id: "green", label: "Harvest", bgColor: "bg-emerald-500", hoverColor: "hover:bg-emerald-600", textColor: "text-white" },
-    { id: "yellow", label: "Light On", bgColor: "bg-amber-500", hoverColor: "hover:bg-amber-600", textColor: "text-white" },
+    { id: "yellow", label: "Light 1 On", bgColor: "bg-amber-500", hoverColor: "hover:bg-amber-600", textColor: "text-white" },
+    { id: "orange", label: "Light 2 On", bgColor: "bg-orange-500", hoverColor: "hover:bg-orange-600", textColor: "text-white" },
     { id: "blue", label: "Remove Cloth", bgColor: "bg-blue-500", hoverColor: "hover:bg-blue-600", textColor: "text-white" },
 ];
 

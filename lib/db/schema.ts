@@ -66,6 +66,7 @@ export const facilitySettings = sqliteTable("facility_settings", {
     removeClothDay: integer("remove_cloth_day").notNull().default(14),
     light1Day: integer("light_1_day").notNull().default(15),
     light2Day: integer("light_2_day").notNull().default(17),
+    harvestDay: integer("harvest_day").notNull().default(60),
     updatedAt: text("updated_at")
         .default(sql`(CURRENT_TIMESTAMP)`)
         .notNull(),
@@ -78,6 +79,8 @@ export const rackLayers = sqliteTable("rack_layers", {
         .notNull(),
     layer: integer("layer").notNull(),
     color: text("color").notNull().default("White"), // 'Blue', 'Pink', 'White'
+    light1: integer("light_1", { mode: "boolean" }).notNull().default(false),
+    light2: integer("light_2", { mode: "boolean" }).notNull().default(false),
     updatedAt: text("updated_at")
         .default(sql`(CURRENT_TIMESTAMP)`)
         .notNull(),

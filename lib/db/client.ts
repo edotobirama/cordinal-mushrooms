@@ -243,6 +243,11 @@ async function ensureSchema(sqlite3: any, dbPtr: number) {
     try { await sqlite3.exec(dbPtr, `ALTER TABLE facility_settings ADD COLUMN remove_cloth_day INTEGER NOT NULL DEFAULT 14;`); } catch (e: any) { }
     try { await sqlite3.exec(dbPtr, `ALTER TABLE facility_settings ADD COLUMN light_1_day INTEGER NOT NULL DEFAULT 15;`); } catch (e: any) { }
     try { await sqlite3.exec(dbPtr, `ALTER TABLE facility_settings ADD COLUMN light_2_day INTEGER NOT NULL DEFAULT 17;`); } catch (e: any) { }
+    try { await sqlite3.exec(dbPtr, `ALTER TABLE facility_settings ADD COLUMN harvest_day INTEGER NOT NULL DEFAULT 60;`); } catch (e: any) { }
+
+    // New layer features
+    try { await sqlite3.exec(dbPtr, `ALTER TABLE rack_layers ADD COLUMN light_1 INTEGER NOT NULL DEFAULT 0;`); } catch (e: any) { }
+    try { await sqlite3.exec(dbPtr, `ALTER TABLE rack_layers ADD COLUMN light_2 INTEGER NOT NULL DEFAULT 0;`); } catch (e: any) { }
 
     // New batch fields
     try { await sqlite3.exec(dbPtr, `ALTER TABLE batches ADD COLUMN notes TEXT;`); } catch (e: any) { }

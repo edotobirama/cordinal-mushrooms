@@ -125,6 +125,7 @@ export async function updateFacilitySettingsService(db: any, params: {
     removeClothDay?: number;
     light1Day?: number;
     light2Day?: number;
+    harvestDay?: number;
 }) {
     const existingRes = await db.select().from(schema.facilitySettings).limit(1);
     const existing = existingRes.length > 0 ? existingRes[0] : null;
@@ -140,6 +141,7 @@ export async function updateFacilitySettingsService(db: any, params: {
     if (params.removeClothDay !== undefined) data.removeClothDay = params.removeClothDay;
     if (params.light1Day !== undefined) data.light1Day = params.light1Day;
     if (params.light2Day !== undefined) data.light2Day = params.light2Day;
+    if (params.harvestDay !== undefined) data.harvestDay = params.harvestDay;
 
     if (!existing) {
         await db.insert(schema.facilitySettings).values({
@@ -150,6 +152,7 @@ export async function updateFacilitySettingsService(db: any, params: {
             removeClothDay: data.removeClothDay ?? 14,
             light1Day: data.light1Day ?? 15,
             light2Day: data.light2Day ?? 17,
+            harvestDay: data.harvestDay ?? 60,
             updatedAt: data.updatedAt
         });
     } else {
@@ -211,11 +214,20 @@ export async function getAllRacksService(db: any) {
         .leftJoin(schema.batches, eq(schema.batchLocations.batchId, schema.batches.id))
         .where(eq(schema.batches.status, "Active"));
 
+    const allRackLayers = await db.select().from(schema.rackLayers);
+
     return racks.map((r: any) => {
         const layerUsages: Record<number, number> = {};
         for (const loc of locs) {
             if (loc.rackId === r.id) {
                 layerUsages[loc.layer] = (layerUsages[loc.layer] || 0) + loc.quantity;
+            }
+        }
+
+        const layerInfo: Record<number, any> = {};
+        for (const layer of allRackLayers) {
+            if (layer.rackId === r.id) {
+                layerInfo[layer.layer] = layer;
             }
         }
 
@@ -233,7 +245,8 @@ export async function getAllRacksService(db: any) {
             lightIntensity: Number(r.lightIntensity),
             x: Number(r.x),
             y: Number(r.y),
-            layerUsages
+            layerUsages,
+            layerInfo
         };
     });
 }
@@ -244,6 +257,15 @@ export async function updateLayerColorService(db: any, rackId: number, layer: nu
         await db.update(schema.rackLayers).set({ color }).where(eq(schema.rackLayers.id, existingRes[0].id));
     } else {
         await db.insert(schema.rackLayers).values({ rackId, layer, color });
+    }
+}
+
+export async function updateLayerLightsService(db: any, rackId: number, layer: number, light1: boolean, light2: boolean) {
+    const existingRes = await db.select().from(schema.rackLayers).where(and(eq(schema.rackLayers.rackId, rackId), eq(schema.rackLayers.layer, layer))).limit(1);
+    if (existingRes.length > 0) {
+        await db.update(schema.rackLayers).set({ light1, light2 }).where(eq(schema.rackLayers.id, existingRes[0].id));
+    } else {
+        await db.insert(schema.rackLayers).values({ rackId, layer, light1, light2 });
     }
 }
 

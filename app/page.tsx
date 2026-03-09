@@ -2,6 +2,7 @@
 
 import { useDb } from "@/components/providers/db-provider";
 import { useDashboard } from "@/hooks/use-dashboard";
+import { useFacility } from "@/hooks/use-facility";
 import { useEffect, useState } from "react";
 import { Loader2, FlaskConical, Beaker, Archive, Package, AlertTriangle, CheckCircle2, Lightbulb, RotateCcw, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -119,16 +120,23 @@ function RoomSection({
 export default function Home() {
   const { db } = useDb();
   const { getDashboardGridStats } = useDashboard();
+  const { getFacilitySettings } = useFacility();
 
   const [loading, setLoading] = useState(true);
   const [gridStats, setGridStats] = useState<any>(null);
+  const [settings, setSettings] = useState<any>(null);
 
   useEffect(() => {
     if (!db) return;
     const loadData = async () => {
       setLoading(true);
       try {
-        setGridStats(await getDashboardGridStats());
+        const [stats, fetchedSettings] = await Promise.all([
+          getDashboardGridStats(),
+          getFacilitySettings()
+        ]);
+        setGridStats(stats);
+        setSettings(fetchedSettings);
       } catch (e) {
         console.error("Dashboard Load Error", e);
       } finally {
@@ -136,7 +144,7 @@ export default function Home() {
       }
     };
     loadData();
-  }, [db, getDashboardGridStats]);
+  }, [db, getDashboardGridStats, getFacilitySettings]);
 
   if (!db || loading || !gridStats) {
     return (
@@ -204,9 +212,9 @@ export default function Home() {
           <StatRow label="In darkness" value={fr.jars.inDarkness} />
           <StatRow label="In light" value={fr.jars.inLight} />
           <SectionDivider label="Actions" />
-          <StatRow label="Remove cloth (Day 13)" value={fr.jars.removeCloth} variant="critical" />
-          <StatRow label="Move to light (Day 17)" value={fr.jars.toKeepInLight} variant="warning" />
-          <StatRow label="To Harvest (Day 60+)" value={fr.jars.toHarvest} variant="success" />
+          <StatRow label={`Remove cloth (Day ${settings?.removeClothDay || 14})`} value={fr.jars.removeCloth} variant="critical" />
+          <StatRow label={`Move to light (Day ${settings?.light1Day || 15} / Day ${settings?.light2Day || 17})`} value={fr.jars.toKeepInLight} variant="warning" />
+          <StatRow label={`To Harvest (Day ${settings?.harvestDay || 60}+)`} value={fr.jars.toHarvest} variant="success" />
         </CultureCard>
       </RoomSection>
 
