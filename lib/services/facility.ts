@@ -63,11 +63,18 @@ export async function updateRackPositionsService(db: any, positions: { id: numbe
 }
 
 export async function deleteRackService(db: any, id: number) {
+    // Check if rack is primary rack for active batches
     const activeBatchCountRes = await db.select({ count: sql<number>`count(*)` })
         .from(schema.batches)
         .where(and(eq(schema.batches.rackId, id), eq(schema.batches.status, "Active")));
 
-    if (activeBatchCountRes[0]?.count > 0) {
+    // Check if rack is a secondary location in batchLocations for active batches
+    const activeBatchLocs = await db.select({ id: schema.batchLocations.batchId })
+        .from(schema.batchLocations)
+        .leftJoin(schema.batches, eq(schema.batchLocations.batchId, schema.batches.id))
+        .where(and(eq(schema.batchLocations.rackId, id), eq(schema.batches.status, "Active")));
+
+    if (Number(activeBatchCountRes[0]?.count) > 0 || activeBatchLocs.length > 0) {
         throw new Error("Cannot delete rack with active batches.");
     }
 
@@ -79,6 +86,7 @@ export async function deleteRackService(db: any, id: number) {
     for (const b of inactiveBatches) {
         await db.delete(schema.inventoryItems).where(eq(schema.inventoryItems.batchId, b.id));
         await db.delete(schema.batchActions).where(eq(schema.batchActions.batchId, b.id));
+        await db.delete(schema.processingBatches).where(eq(schema.processingBatches.batchId, b.id));
     }
 
     await db.delete(schema.batches).where(eq(schema.batches.rackId, id));
@@ -110,24 +118,42 @@ export async function getFacilitySettingsService(db: any) {
 }
 
 export async function updateFacilitySettingsService(db: any, params: {
-    roomWidth: number;
-    roomHeight: number;
-    shakeMorningTime: string;
-    shakeEveningTime: string;
+    roomWidth?: number;
+    roomHeight?: number;
+    shakeMorningTime?: string;
+    shakeEveningTime?: string;
+    removeClothDay?: number;
+    light1Day?: number;
+    light2Day?: number;
 }) {
-    const existing = await db.select().from(schema.facilitySettings).limit(1);
-    const data = {
-        roomWidth: params.roomWidth,
-        roomHeight: params.roomHeight,
-        shakeMorningTime: params.shakeMorningTime,
-        shakeEveningTime: params.shakeEveningTime,
+    const existingRes = await db.select().from(schema.facilitySettings).limit(1);
+    const existing = existingRes.length > 0 ? existingRes[0] : null;
+
+    const data: any = {
         updatedAt: new Date().toISOString()
     };
 
-    if (existing.length === 0) {
-        await db.insert(schema.facilitySettings).values(data);
+    if (params.roomWidth !== undefined) data.roomWidth = params.roomWidth;
+    if (params.roomHeight !== undefined) data.roomHeight = params.roomHeight;
+    if (params.shakeMorningTime !== undefined) data.shakeMorningTime = params.shakeMorningTime;
+    if (params.shakeEveningTime !== undefined) data.shakeEveningTime = params.shakeEveningTime;
+    if (params.removeClothDay !== undefined) data.removeClothDay = params.removeClothDay;
+    if (params.light1Day !== undefined) data.light1Day = params.light1Day;
+    if (params.light2Day !== undefined) data.light2Day = params.light2Day;
+
+    if (!existing) {
+        await db.insert(schema.facilitySettings).values({
+            roomWidth: data.roomWidth ?? 20,
+            roomHeight: data.roomHeight ?? 15,
+            shakeMorningTime: data.shakeMorningTime ?? "09:00",
+            shakeEveningTime: data.shakeEveningTime ?? "21:00",
+            removeClothDay: data.removeClothDay ?? 14,
+            light1Day: data.light1Day ?? 15,
+            light2Day: data.light2Day ?? 17,
+            updatedAt: data.updatedAt
+        });
     } else {
-        await db.update(schema.facilitySettings).set(data).where(eq(schema.facilitySettings.id, existing[0].id));
+        await db.update(schema.facilitySettings).set(data).where(eq(schema.facilitySettings.id, existing.id));
     }
 }
 

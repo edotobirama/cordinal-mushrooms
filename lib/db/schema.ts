@@ -47,6 +47,8 @@ export const batches = sqliteTable("batches", {
     stage: text("stage").notNull().default("Incubation"), // 'Incubation' (Dark), 'Stress' (Indirect), 'Fruiting', 'Drying'
     estimatedReadyDate: text("estimated_ready_date"), // ISO Date String
     status: text("status").notNull().default("Active"), // 'Active', 'Harvested', 'Contaminated'
+    notes: text("notes"),
+    motherCultureSource: text("mother_culture_source").notNull().default("New"),
     createdAt: text("created_at")
         .default(sql`(CURRENT_TIMESTAMP)`)
         .notNull(),
@@ -61,6 +63,9 @@ export const facilitySettings = sqliteTable("facility_settings", {
     roomHeight: real("room_height").notNull().default(15),
     shakeMorningTime: text("shake_morning_time").notNull().default("09:00"),
     shakeEveningTime: text("shake_evening_time").notNull().default("21:00"),
+    removeClothDay: integer("remove_cloth_day").notNull().default(14),
+    light1Day: integer("light_1_day").notNull().default(15),
+    light2Day: integer("light_2_day").notNull().default(17),
     updatedAt: text("updated_at")
         .default(sql`(CURRENT_TIMESTAMP)`)
         .notNull(),

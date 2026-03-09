@@ -4,14 +4,11 @@
 };
 
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/sidebar";
 import { MobileSidebar } from "@/components/mobile-sidebar";
 import { ThemeProvider } from "@/components/theme-provider";
 import { DbProvider } from "@/components/providers/db-provider";
-
-const inter = Inter({ subsets: ["latin"] });
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -37,7 +34,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} flex h-screen bg-background`}>
+      <body className="flex font-sans h-screen bg-background">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

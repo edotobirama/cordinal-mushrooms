@@ -90,12 +90,17 @@ export function useFacility() {
         if (!db) return;
         const get = (key: string) => (formData instanceof FormData ? formData.get(key) : formData[key]);
 
-        await updateFacilitySettingsService(db, {
-            roomWidth: Number(get("roomWidth")),
-            roomHeight: Number(get("roomHeight")),
-            shakeMorningTime: get("shakeMorningTime") as string,
-            shakeEveningTime: get("shakeEveningTime") as string
-        });
+        const payload: any = {};
+        if (get("roomWidth") !== null && get("roomWidth") !== undefined) payload.roomWidth = Number(get("roomWidth"));
+        if (get("roomHeight") !== null && get("roomHeight") !== undefined) payload.roomHeight = Number(get("roomHeight"));
+        if (get("shakeMorningTime") !== null && get("shakeMorningTime") !== undefined) payload.shakeMorningTime = get("shakeMorningTime") as string;
+        if (get("shakeEveningTime") !== null && get("shakeEveningTime") !== undefined) payload.shakeEveningTime = get("shakeEveningTime") as string;
+
+        if (get("removeClothDay") !== null && get("removeClothDay") !== undefined) payload.removeClothDay = Number(get("removeClothDay"));
+        if (get("light1Day") !== null && get("light1Day") !== undefined) payload.light1Day = Number(get("light1Day"));
+        if (get("light2Day") !== null && get("light2Day") !== undefined) payload.light2Day = Number(get("light2Day"));
+
+        await updateFacilitySettingsService(db, payload);
         await saveDatabase();
     }, [db]);
 

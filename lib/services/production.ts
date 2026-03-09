@@ -12,8 +12,10 @@ export async function startBatchService(db: any, params: {
     jarCount: number;
     locationsStr: string;
     providedLayer: number;
+    notes?: string | null;
+    motherCultureSource?: string;
 }) {
-    let { name: providedName, type, sourceId, startDate, rackId, jarCount, locationsStr, providedLayer } = params;
+    let { name: providedName, type, sourceId, startDate, rackId, jarCount, locationsStr, providedLayer, notes, motherCultureSource } = params;
 
     if (!sourceId || sourceId === "undefined" || sourceId === "null") {
         sourceId = "New Source";
@@ -71,6 +73,8 @@ export async function startBatchService(db: any, params: {
         jarCount,
         stage: "Incubation",
         status: "Active",
+        notes: notes || null,
+        motherCultureSource: motherCultureSource || "New"
     }).returning({ id: schema.batches.id });
 
     const batchId = result[0]?.id;
@@ -285,6 +289,10 @@ export async function deleteBatchService(db: any, id: number) {
     }
 
     await db.delete(schema.batches).where(eq(schema.batches.id, id));
+}
+
+export async function updateBatchNotesService(db: any, batchId: number, notes: string) {
+    await db.update(schema.batches).set({ notes }).where(eq(schema.batches.id, batchId));
 }
 
 export async function updateBatchService(db: any, params: {

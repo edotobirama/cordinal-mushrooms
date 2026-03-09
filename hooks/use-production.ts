@@ -8,7 +8,8 @@ import {
     deleteBatchService,
     updateBatchService,
     logBatchActionService,
-    discardPartialBatchService
+    discardPartialBatchService,
+    updateBatchNotesService
 } from "@/lib/services/production";
 
 export function useProduction() {
@@ -30,9 +31,11 @@ export function useProduction() {
         const jarCount = Number(get("jarCount"));
         const locationsStr = get("locations") as string;
         const providedLayer = Number(get("layer"));
+        const notes = get("notes") as string || null;
+        const motherCultureSource = get("motherCultureSource") as string || "New";
 
         const res = await startBatchService(db, {
-            name, type, sourceId, startDate, rackId, jarCount, locationsStr, providedLayer
+            name, type, sourceId, startDate, rackId, jarCount, locationsStr, providedLayer, notes, motherCultureSource
         });
 
         await saveDatabase();
@@ -84,5 +87,11 @@ export function useProduction() {
         await saveDatabase();
     }, [db]);
 
-    return { startBatch, updateBatch, harvestBatch, discardBatch, deleteBatch, logBatchAction, discardPartialBatch };
+    const updateBatchNotes = useCallback(async (batchId: number, notes: string) => {
+        if (!db) return;
+        await updateBatchNotesService(db, batchId, notes);
+        await saveDatabase();
+    }, [db]);
+
+    return { startBatch, updateBatch, updateBatchNotes, harvestBatch, discardBatch, deleteBatch, logBatchAction, discardPartialBatch };
 }

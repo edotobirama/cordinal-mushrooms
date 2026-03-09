@@ -238,4 +238,13 @@ async function ensureSchema(sqlite3: any, dbPtr: number) {
             console.error("Migration error inventory_items:", e);
         }
     }
+
+    // New timeline settings
+    try { await sqlite3.exec(dbPtr, `ALTER TABLE facility_settings ADD COLUMN remove_cloth_day INTEGER NOT NULL DEFAULT 14;`); } catch (e: any) { }
+    try { await sqlite3.exec(dbPtr, `ALTER TABLE facility_settings ADD COLUMN light_1_day INTEGER NOT NULL DEFAULT 15;`); } catch (e: any) { }
+    try { await sqlite3.exec(dbPtr, `ALTER TABLE facility_settings ADD COLUMN light_2_day INTEGER NOT NULL DEFAULT 17;`); } catch (e: any) { }
+
+    // New batch fields
+    try { await sqlite3.exec(dbPtr, `ALTER TABLE batches ADD COLUMN notes TEXT;`); } catch (e: any) { }
+    try { await sqlite3.exec(dbPtr, `ALTER TABLE batches ADD COLUMN mother_culture_source TEXT NOT NULL DEFAULT 'New';`); } catch (e: any) { }
 }

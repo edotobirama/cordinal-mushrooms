@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useDb } from "@/components/providers/db-provider";
@@ -24,7 +23,6 @@ import { Input } from "@/components/ui/input";
 export default function InventoryPage() {
     const { db } = useDb();
     const [loading, setLoading] = useState(true);
-    const [fruitingBatches, setFruitingBatches] = useState<any[]>([]);
     const [storedItems, setStoredItems] = useState<any[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [stats, setStats] = useState({
@@ -37,15 +35,7 @@ export default function InventoryPage() {
         if (!db) return;
         setLoading(true);
         try {
-            // 1. Fetch Fruiting Batches
-            const fruiting = await db.select()
-                .from(schema.batches)
-                .where(eq(schema.batches.stage, "Fruiting"))
-                .orderBy(desc(schema.batches.startDate));
-
-            setFruitingBatches(fruiting);
-
-            // 2. Fetch Stored Items (joined with batches for source name)
+            // Fetch Stored Items (joined with batches for source name)
             const stored = await db.select({
                 id: schema.inventoryItems.id,
                 name: schema.inventoryItems.name,

@@ -147,6 +147,10 @@ export async function getActionsService(db: any) {
         .leftJoin(schema.racks, eq(schema.batches.rackId, schema.racks.id))
         .where(not(inArray(schema.batches.status, ["Harvested", "Discarded"])));
 
+    const settingsRes = await db.select().from(schema.facilitySettings).limit(1);
+    const settings = settingsRes.length > 0 ? settingsRes[0] : { removeClothDay: 14, light1Day: 15, light2Day: 17 };
+    const { removeClothDay, light1Day, light2Day } = settings as any;
+
     const today = new Date();
     const actions = [];
 
@@ -184,21 +188,30 @@ export async function getActionsService(db: any) {
                 });
             }
         } else {
-            if (daysDiff === 13) {
+            if (daysDiff === removeClothDay) {
                 actions.push({
                     type: 'Blanket',
                     batch: batch.name,
                     rack: batch.rackName,
-                    message: `Remove blanket for ${batch.name} in ${batch.rackName} (Day 13)`,
+                    message: `Remove blanket for ${batch.name} in ${batch.rackName} (Day ${removeClothDay})`,
                     icon: CheckCircle2,
                     color: "text-blue-500"
                 });
-            } else if (daysDiff === 17) {
+            } else if (daysDiff === light1Day) {
                 actions.push({
                     type: 'Light',
                     batch: batch.name,
                     rack: batch.rackName,
-                    message: `Switch on lights for ${batch.name} in ${batch.rackName} (Day 17)`,
+                    message: `Switch on Light 1 for ${batch.name} in ${batch.rackName} (Day ${light1Day})`,
+                    icon: Lightbulb,
+                    color: "text-amber-500"
+                });
+            } else if (daysDiff === light2Day) {
+                actions.push({
+                    type: 'Light',
+                    batch: batch.name,
+                    rack: batch.rackName,
+                    message: `Switch on Light 2 for ${batch.name} in ${batch.rackName} (Day ${light2Day})`,
                     icon: Lightbulb,
                     color: "text-amber-500"
                 });
@@ -260,6 +273,10 @@ export async function getPendingActionCountsService(db: any) {
 
     const batchesWithoutCloth = new Set(removeClothActions.map((a: any) => a.batchId));
 
+    const settingsRes = await db.select().from(schema.facilitySettings).limit(1);
+    const settings = settingsRes.length > 0 ? settingsRes[0] : { removeClothDay: 14, light1Day: 15, light2Day: 17 };
+    const { removeClothDay, light1Day, light2Day } = settings as any;
+
     const today = new Date();
     let removeClothJars = 0;
     let switchLightsJars = 0;
@@ -279,9 +296,9 @@ export async function getPendingActionCountsService(db: any) {
                 harvestReadyJars += batch.jarCount;
             }
         } else {
-            if (daysDiff >= 13 && hasCloth) {
+            if (daysDiff >= removeClothDay && hasCloth) {
                 removeClothJars += batch.jarCount;
-            } else if (daysDiff >= 16) {
+            } else if (daysDiff === light1Day || daysDiff >= light2Day) {
                 switchLightsJars += batch.jarCount;
             } else if (daysDiff >= 60 && daysDiff < 65) {
                 harvestReadyJars += batch.jarCount;
@@ -335,6 +352,10 @@ export async function getDashboardGridStatsService(db: any) {
     const pendingLcShakes = await getPendingLcShakesService(db);
     const batchesNeedingShake = new Set(pendingLcShakes.map((b: any) => b.id));
 
+    const settingsRes = await db.select().from(schema.facilitySettings).limit(1);
+    const settings = settingsRes.length > 0 ? settingsRes[0] : { removeClothDay: 14, light1Day: 15, light2Day: 17 };
+    const { removeClothDay, light1Day, light2Day } = settings as any;
+
     activeBatches.forEach((batch: any) => {
         const start = parseISO(batch.startDate);
         const age = differenceInCalendarDays(today, start);
@@ -367,8 +388,8 @@ export async function getDashboardGridStatsService(db: any) {
             if (inDarkness) stats.inDarkness += batch.jarCount;
             else stats.inLight += batch.jarCount;
 
-            if (age === 13) stats.removeCloth += batch.jarCount; // day 13
-            if (age >= 17 && inDarkness) stats.toKeepInLight += batch.jarCount;
+            if (age === removeClothDay) stats.removeCloth += batch.jarCount;
+            if ((age === light1Day || age >= light2Day) && inDarkness) stats.toKeepInLight += batch.jarCount;
             if (age >= 60) stats.toHarvest += batch.jarCount;
         }
     });
@@ -466,6 +487,10 @@ export async function getFacilityActionMapService(db: any) {
 
     const batchesWithoutCloth = new Set(removeClothActions.map((a: any) => a.batchId));
 
+    const settingsRes = await db.select().from(schema.facilitySettings).limit(1);
+    const settings = settingsRes.length > 0 ? settingsRes[0] : { removeClothDay: 14, light1Day: 15, light2Day: 17 };
+    const { removeClothDay, light1Day, light2Day } = settings as any;
+
     for (const batch of activeBatches) {
         if (!batch.rackId) continue;
 
@@ -489,8 +514,8 @@ export async function getFacilityActionMapService(db: any) {
             else if (age >= 22) requiredActionColor = 'green'; // Harvest
         }
         else if (batch.type === 'Jars' || batch.type === 'Spawn' || batch.type === 'Grain' || batch.type === 'Basal Medium') {
-            if (age >= 13 && hasCloth) requiredActionColor = 'blue'; // Remove Cloth
-            else if (age >= 16 && inDarkness) requiredActionColor = 'yellow'; // Light On
+            if (age >= removeClothDay && hasCloth) requiredActionColor = 'blue'; // Remove Cloth
+            else if ((age === light1Day || age >= light2Day) && inDarkness) requiredActionColor = 'yellow'; // Light 1 and Light 2 Triggers
             else if (age >= 60) requiredActionColor = 'green'; // Harvest
         }
 

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useDb } from "@/components/providers/db-provider";
@@ -34,6 +33,7 @@ import { Button } from "@/components/ui/button";
 
 export default function ProductionPage() {
     const { db } = useDb();
+    const { updateBatchNotes } = useProduction();
     const { permanentlyDeleteBatch, permanentlyDeleteWasteItem } = useInventory();
     const [loading, setLoading] = useState(true);
     const [activeBatches, setActiveBatches] = useState<any[]>([]);
@@ -62,6 +62,7 @@ export default function ProductionPage() {
                 rackId: schema.batches.rackId,
                 layer: schema.batches.layer,
                 rackName: schema.racks.name,
+                notes: schema.batches.notes,
             })
                 .from(schema.batches)
                 .leftJoin(schema.racks, eq(schema.batches.rackId, schema.racks.id))
@@ -212,6 +213,7 @@ export default function ProductionPage() {
                                     <TableHead>Jars</TableHead>
                                     <TableHead>Stage</TableHead>
                                     <TableHead>Next Action</TableHead>
+                                    <TableHead>Notes</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -267,12 +269,24 @@ export default function ProductionPage() {
                                                     <ProductionActions batchId={batch.id} batchName={batch.name} onSuccess={refreshData} />
                                                 </div>
                                             </TableCell>
+                                            <TableCell>
+                                                <input
+                                                    className="w-full bg-transparent border-b border-transparent hover:border-border focus:border-primary focus:outline-none transition-colors text-sm py-1"
+                                                    defaultValue={batch.notes || ""}
+                                                    placeholder="Add note..."
+                                                    onBlur={(e) => {
+                                                        if (e.target.value !== (batch.notes || "")) {
+                                                            updateBatchNotes(batch.id, e.target.value);
+                                                        }
+                                                    }}
+                                                />
+                                            </TableCell>
                                         </TableRow>
                                     );
                                 })}
                                 {activeBatches.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={9} className="text-center h-24 text-muted-foreground">
+                                        <TableCell colSpan={10} className="text-center h-24 text-muted-foreground">
                                             No active batches. Start a new one!
                                         </TableCell>
                                     </TableRow>

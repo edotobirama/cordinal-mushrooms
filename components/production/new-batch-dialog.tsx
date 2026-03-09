@@ -206,6 +206,25 @@ export function NewBatchDialog({ racks, onSuccess }: { racks: Rack[], onSuccess?
                                     </SelectContent>
                                 </Select>
                             </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="motherCultureSource">Mother Culture Source</Label>
+                                <Input
+                                    id="motherCultureSource"
+                                    name="motherCultureSource"
+                                    placeholder="e.g. Purchased Strain, Clone, etc."
+                                    defaultValue="New"
+                                    className="bg-background"
+                                />
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                                <Label htmlFor="notes">Notes</Label>
+                                <Input
+                                    id="notes"
+                                    name="notes"
+                                    placeholder="Optional observations or specific notes for this batch"
+                                    className="bg-background"
+                                />
+                            </div>
                         </div>
                     </div>
 
