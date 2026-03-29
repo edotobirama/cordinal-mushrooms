@@ -103,12 +103,29 @@ export function NewBatchDialog({ racks, onSuccess }: { racks: Rack[], onSuccess?
             const [rackIdStr, layerStr] = key.split('-');
             const rack = racks.find(r => r.id === Number(rackIdStr));
             if (rack) {
-                const maxLayers = rack.totalLayers || 7;
-                const layerCapacity = Math.floor(rack.capacity / maxLayers);
+                // Each layer can hold up to the full rack capacity.
+                // Check that this layer's usage (existing + requested) doesn't exceed it.
+                const layerCapacity = rack.capacity;
                 const currentLayerUsage = rack.layerUsages?.[Number(layerStr)] || 0;
 
                 if (reqQty + currentLayerUsage > layerCapacity) {
                     alert(`Not enough capacity on ${rack.name} Layer ${layerStr}.\nIt can hold ${layerCapacity} items total, and ${currentLayerUsage} are already used.\nYou requested ${reqQty}, but only ${layerCapacity - currentLayerUsage} slots are available.`);
+                    return;
+                }
+            }
+        }
+
+        // Also verify overall rack capacity isn't exceeded
+        const rackTotals: Record<string, number> = {};
+        for (const loc of locations) {
+            rackTotals[loc.rackId] = (rackTotals[loc.rackId] || 0) + loc.quantity;
+        }
+        for (const [rackIdStr, reqQty] of Object.entries(rackTotals)) {
+            const rack = racks.find(r => r.id === Number(rackIdStr));
+            if (rack) {
+                const available = rack.capacity - rack.currentUsage;
+                if (reqQty > available) {
+                    alert(`Not enough overall capacity on ${rack.name}.\nTotal capacity: ${rack.capacity}, already used: ${rack.currentUsage}.\nYou requested ${reqQty}, but only ${available} slots are available.`);
                     return;
                 }
             }

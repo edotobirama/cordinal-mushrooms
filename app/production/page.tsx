@@ -20,8 +20,17 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { desc, eq, inArray, not, ne } from "drizzle-orm";
 import { Package, Trash2, Loader2, AlertTriangle } from "lucide-react";
-import { addDays, format, parseISO } from "date-fns";
+import { addDays, format, parseISO, isValid } from "date-fns";
 import { useEffect, useState } from "react";
+
+/** Safely parse a date string that may be ISO ("2025-01-01T00:00:00") or SQLite CURRENT_TIMESTAMP ("2025-01-01 00:00:00") format. */
+function safeDate(value: string | null | undefined): Date | null {
+    if (!value) return null;
+    // Replace space separator with T so SQLite timestamps become valid ISO
+    const normalised = value.replace(' ', 'T');
+    const d = new Date(normalised);
+    return isValid(d) ? d : null;
+}
 import {
     Dialog,
     DialogContent,
@@ -336,7 +345,7 @@ export default function ProductionPage() {
                                                 : <span className="text-muted-foreground">—</span>}
                                         </TableCell>
                                         <TableCell>{item.batchStartDate ? format(parseISO(item.batchStartDate), 'MMM d, yyyy') : "—"}</TableCell>
-                                        <TableCell>{format(new Date(item.createdAt), 'MMM d, yyyy')}</TableCell>
+                                        <TableCell>{safeDate(item.createdAt) ? format(safeDate(item.createdAt)!, 'MMM d, yyyy') : "—"}</TableCell>
                                         <TableCell>
                                             <NotesDialog
                                                 currentNotes={item.notes || ""}
@@ -398,7 +407,7 @@ export default function ProductionPage() {
                                         <TableCell className="max-w-[150px] truncate" title={batch.sourceId}>{batch.sourceId || "—"}</TableCell>
                                         <TableCell>{batch.type}</TableCell>
                                         <TableCell>{format(parseISO(batch.startDate), 'MMM d, yyyy')}</TableCell>
-                                        <TableCell>{batch.discardedAt ? format(new Date(batch.discardedAt), 'MMM d, yyyy') : "—"}</TableCell>
+                                        <TableCell>{batch.discardedAt ? (safeDate(batch.discardedAt) ? format(safeDate(batch.discardedAt)!, 'MMM d, yyyy') : "—") : "—"}</TableCell>
                                         <TableCell>{batch.jarCount}</TableCell>
                                         <TableCell>
                                             <Badge variant="destructive" className="bg-red-500">Discarded</Badge>
@@ -466,7 +475,7 @@ export default function ProductionPage() {
                                             <TableCell className="max-w-[150px] truncate" title={item.sourceName}>{item.sourceName || "—"}</TableCell>
                                             <TableCell>{item.type}</TableCell>
                                             <TableCell>{item.batchStartDate ? format(parseISO(item.batchStartDate), 'MMM d, yyyy') : "—"}</TableCell>
-                                            <TableCell>{format(new Date(item.createdAt), 'MMM d, yyyy')}</TableCell>
+                                            <TableCell>{safeDate(item.createdAt) ? format(safeDate(item.createdAt)!, 'MMM d, yyyy') : "—"}</TableCell>
                                             <TableCell>{item.quantity} {item.unit}</TableCell>
                                             <TableCell>
                                                 <Badge className="bg-orange-500 text-white">Waste</Badge>
