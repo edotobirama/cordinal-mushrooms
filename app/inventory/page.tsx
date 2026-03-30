@@ -12,13 +12,21 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { desc, eq, sql, not, inArray, isNull } from "drizzle-orm";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, Package, Loader2, Search } from "lucide-react";
 import { AddItemDialog } from "@/components/inventory/add-item-dialog";
 import { InventoryActions } from "@/components/inventory/inventory-actions";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
+
+/** Safely parse a date string that may be ISO ("2025-01-01T00:00:00") or SQLite CURRENT_TIMESTAMP ("2025-01-01 00:00:00") format. */
+function safeDate(value: string | null | undefined): Date | null {
+    if (!value) return null;
+    const normalised = value.replace(' ', 'T');
+    const d = new Date(normalised);
+    return isValid(d) ? d : null;
+}
 
 export default function InventoryPage() {
     const { db } = useDb();
@@ -214,8 +222,8 @@ export default function InventoryPage() {
                                     </TableCell>
                                     <TableCell>{item.quantity}</TableCell>
                                     <TableCell>{item.unit}</TableCell>
-                                    <TableCell className="text-muted-foreground">{item.sourceName || "—"}</TableCell>
-                                    <TableCell>{format(new Date(item.createdAt), "PPP")}</TableCell>
+                                    <TableCell>{item.sourceName || "—"}</TableCell>
+                                    <TableCell>{safeDate(item.createdAt) ? format(safeDate(item.createdAt)!, 'PPP') : "—"}</TableCell>
                                     <TableCell>
                                         <InventoryActions itemId={item.id} itemName={item.name} itemType={item.type} currentQuantity={item.quantity} onSuccess={refreshData} />
                                     </TableCell>

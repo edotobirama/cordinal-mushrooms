@@ -145,10 +145,15 @@ export function NewBatchDialog({ racks, onSuccess }: { racks: Rack[], onSuccess?
         formData.set("type", selectedType);
         formData.set("sourceId", selectedSourceId);
 
-        await startBatch(formData);
-        setOpen(false);
-        if (onSuccess) onSuccess();
-        else window.location.reload();
+        try {
+            await startBatch(formData);
+            setOpen(false);
+            if (onSuccess) onSuccess();
+            else window.location.reload();
+        } catch (error) {
+            console.error(error);
+            alert(error instanceof Error ? error.message : "Failed to start batch");
+        }
     }
 
     return (

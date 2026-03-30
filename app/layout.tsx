@@ -9,6 +9,7 @@ import { Sidebar } from "@/components/sidebar";
 import { MobileSidebar } from "@/components/mobile-sidebar";
 import { ThemeProvider } from "@/components/theme-provider";
 import { DbProvider } from "@/components/providers/db-provider";
+import { GlobalReminder } from "@/components/global-reminder";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -53,6 +54,8 @@ export default function RootLayout({
                 {children}
               </main>
             </div>
+            {/* Run global logic logic components inside DbProvider */}
+            <GlobalReminder />
           </DbProvider>
         </ThemeProvider>
       </body>

@@ -100,6 +100,7 @@ export function useFacility() {
         if (get("removeClothDay") !== null && get("removeClothDay") !== undefined) payload.removeClothDay = Number(get("removeClothDay"));
         if (get("light1Day") !== null && get("light1Day") !== undefined) payload.light1Day = Number(get("light1Day"));
         if (get("light2Day") !== null && get("light2Day") !== undefined) payload.light2Day = Number(get("light2Day"));
+        if (get("harvestDay") !== null && get("harvestDay") !== undefined) payload.harvestDay = Number(get("harvestDay"));
 
         await updateFacilitySettingsService(db, payload);
         await saveDatabase();

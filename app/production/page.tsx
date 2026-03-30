@@ -54,6 +54,7 @@ export default function ProductionPage() {
     const [locationMap, setLocationMap] = useState<Map<number, string[]>>(new Map());
     const [permDeleteBatch, setPermDeleteBatch] = useState<{ id: number; name: string } | null>(null);
     const [permDeleteWaste, setPermDeleteWaste] = useState<{ id: number; name: string } | null>(null);
+    const [settings, setSettings] = useState<any>(null);
 
     const refreshData = async () => {
         if (!db) return;
@@ -141,10 +142,13 @@ export default function ProductionPage() {
             setWasteItems(waste);
             setStoredItems(stored.sort((a: any, b: any) => b.id - a.id));
 
-            // Fetch Available Racks
-            const { getAllRacksService } = await import("@/lib/services/facility");
+            // Fetch Available Racks and Settings
+            const { getAllRacksService, getFacilitySettingsService } = await import("@/lib/services/facility");
             const allRacks = await getAllRacksService(db);
+            const loadedSettings = await getFacilitySettingsService(db);
+            
             setAvailableRacks(allRacks.filter((r: any) => r.status === "Active"));
+            setSettings(loadedSettings || {});
 
             // Fetch Locations for Active Batches
             const batchIds = active.map((b: any) => b.id);
@@ -232,26 +236,37 @@ export default function ProductionPage() {
                                 {activeBatches.map((batch) => {
                                     const start = parseISO(batch.startDate);
                                     const daysElapsed = Math.floor((new Date().getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-                                    const day14 = addDays(start, 14);
-                                    const day16 = addDays(start, 16);
+                                    
+                                    const cClothDay = settings?.removeClothDay ?? 14;
+                                    const cLight1Day = settings?.light1Day ?? 15;
+                                    const cHarvestDay = settings?.harvestDay ?? 60;
+                                    
+                                    const dayCloth = addDays(start, cClothDay);
+                                    const dayLight = addDays(start, cLight1Day);
+                                    const dayHarvest = addDays(start, cHarvestDay);
 
-                                    let nextAction = `Remove Blanket: ${format(day14, 'MMM d')}`;
-                                    if (new Date() > day14) {
-                                        nextAction = `Lights On: ${format(day16, 'MMM d')}`;
+                                    let nextAction = `Remove Blanket: ${format(dayCloth, 'MMM d')}`;
+                                    if (daysElapsed >= cClothDay) {
+                                        nextAction = `Lights On: ${format(dayLight, 'MMM d')}`;
+                                    }
+                                    if (daysElapsed >= cLight1Day) {
+                                        nextAction = `Harvest: ${format(dayHarvest, 'MMM d')}`;
                                     }
 
                                     // Specific logic for Liquid Culture
                                     if (batch.type === "Liquid Culture") {
-                                        const day20 = addDays(start, 20);
+                                        const cLcClothDay = 20; // Some default LC timeline or we can adapt to use removing cloth earlier if requested. The issue says "Remove Cloth -> Day 11" globally? Let's use configured cClothDay for LC too!
+                                        const lcDayCloth = addDays(start, cClothDay);
+                                        const lcDayHarvest = addDays(start, cHarvestDay);
 
                                         if (daysElapsed <= 5) {
                                             nextAction = `Shake 2x Daily`;
-                                        } else if (daysElapsed < 20) {
-                                            nextAction = `Incubating (Remove Cloth: ${format(day20, 'MMM d')})`;
-                                        } else if (daysElapsed === 20) {
+                                        } else if (daysElapsed < cClothDay) {
+                                            nextAction = `Incubating (Remove Cloth: ${format(lcDayCloth, 'MMM d')})`;
+                                        } else if (daysElapsed === cClothDay) {
                                             nextAction = `Remove Cloth / Light Exposure`;
-                                        } else if (daysElapsed >= 21) {
-                                            nextAction = `Store in Inventory (Harvest)`;
+                                        } else if (daysElapsed >= cClothDay + 1) {
+                                            nextAction = `Store in Inventory (Harvest: ${format(lcDayHarvest, 'MMM d')})`;
                                         }
                                     }
 

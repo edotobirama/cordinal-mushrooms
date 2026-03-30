@@ -8,7 +8,15 @@ import { History, Loader2, MapPin } from "lucide-react";
 import { useState, useEffect } from "react";
 import * as schema from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isValid } from "date-fns";
+
+/** Safely parse a date string that may be ISO ("2025-01-01T00:00:00") or SQLite CURRENT_TIMESTAMP ("2025-01-01 00:00:00") format. */
+function safeDate(value: string | null | undefined): Date | null {
+    if (!value) return null;
+    const normalised = value.replace(' ', 'T');
+    const d = new Date(normalised);
+    return isValid(d) ? d : null;
+}
 
 export function BatchHistoryDialog({ batchId, batchName, sourceId, startDate }: { batchId: number, batchName: string, sourceId: string, startDate: string }) {
     const { db } = useDb();
@@ -114,10 +122,10 @@ export function BatchHistoryDialog({ batchId, batchName, sourceId, startDate }: 
                                         <span className="font-medium">{act.actionType}</span>
                                         <div className="flex flex-col items-end">
                                             <span className="text-xs text-muted-foreground">
-                                                {format(parseISO(act.performedAt), 'MMM d, yy')}
+                                                {safeDate(act.performedAt) ? format(safeDate(act.performedAt)!, 'MMM d, yy') : '—'}
                                             </span>
                                             <span className="text-xs text-muted-foreground">
-                                                {format(parseISO(act.performedAt), 'h:mm a')}
+                                                {safeDate(act.performedAt) ? format(safeDate(act.performedAt)!, 'h:mm a') : '—'}
                                             </span>
                                         </div>
                                     </div>
