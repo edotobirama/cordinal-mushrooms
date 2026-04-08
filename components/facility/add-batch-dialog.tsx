@@ -49,6 +49,8 @@ export function AddBatchDialog({ open, onOpenChange, rackId, layer, onSuccess }:
         }
     };
 
+    const today = format(new Date(), "yyyy-MM-dd");
+
     useEffect(() => {
         let requiredType = "";
         if (selectedType === "Liquid Culture") requiredType = "Base Culture"; // LC needs Agar
@@ -78,8 +80,7 @@ export function AddBatchDialog({ open, onOpenChange, rackId, layer, onSuccess }:
 
         try {
             await startBatch(formData);
-            // Aesthetics: Minimal alert or toast (User prefers aesthetic, standard alert is okay for now, eventually toast)
-            // alert("Batch created successfully!"); 
+            // Aesthetics: Minimal alert or toast
             onOpenChange(false);
             if (onSuccess) onSuccess();
         } catch (error) {
@@ -103,7 +104,23 @@ export function AddBatchDialog({ open, onOpenChange, rackId, layer, onSuccess }:
                     </DialogDescription>
                 </DialogHeader>
 
-                <form onSubmit={onSubmit} className="p-6 space-y-6">
+                <form onSubmit={onSubmit} className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+                    
+                    <Card>
+                        <CardContent className="pt-6 space-y-4">
+                            <Label htmlFor="name" className="flex items-center gap-2 text-primary font-semibold">
+                                <Archive className="w-4 h-4" /> Batch ID
+                            </Label>
+                            <Input
+                                id="name"
+                                name="name"
+                                defaultValue={`Batch-${today}`}
+                                required
+                                className="bg-background border-primary/20 focus-visible:ring-primary/50"
+                            />
+                        </CardContent>
+                    </Card>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Type Selection */}
                         <Card>
@@ -186,6 +203,19 @@ export function AddBatchDialog({ open, onOpenChange, rackId, layer, onSuccess }:
                                     onChange={handleDateChange}
                                     className="bg-background"
                                     required
+                                />
+                            </div>
+
+                            {/* Notes */}
+                            <div className="space-y-2 md:col-span-3 pt-2">
+                                <Label htmlFor="notes" className="flex items-center gap-2">
+                                     <Info className="w-4 h-4" /> Notes
+                                </Label>
+                                <Input
+                                    id="notes"
+                                    name="notes"
+                                    placeholder="Optional observations or specific notes for this batch"
+                                    className="bg-background"
                                 />
                             </div>
                         </CardContent>

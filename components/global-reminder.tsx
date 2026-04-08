@@ -22,8 +22,18 @@ export function GlobalReminder() {
                 // Fetch locally
                 const settingsRes = await db.select().from(schema.facilitySettings).limit(1);
                 const settings = settingsRes[0] || {};
-                const activeBatches = await db.select().from(schema.batches)
-                    .where(not(inArray(schema.batches.status, ["Harvested", "Discarded"])));
+                
+                const activeBatches = await db.select({
+                    id: schema.batches.id,
+                    name: schema.batches.name,
+                    type: schema.batches.type,
+                    startDate: schema.batches.startDate,
+                    rackName: schema.racks.name,
+                    layer: schema.batches.layer
+                })
+                .from(schema.batches)
+                .leftJoin(schema.racks, eq(schema.batches.rackId, schema.racks.id))
+                .where(not(inArray(schema.batches.status, ["Harvested", "Discarded"])));
 
                 const today = new Date();
                 const newReminders: {batch: string; message: string}[] = [];
@@ -41,15 +51,16 @@ export function GlobalReminder() {
 
                     const messages = [];
 
-                    if (daysElapsed === clothDay) messages.push("Remove Cloth");
+                    if (daysElapsed === clothDay) messages.push("Remove cloth");
                     if (daysElapsed === light1Day) messages.push("Trigger Light 1");
                     if (daysElapsed === light2Day) messages.push("Trigger Light 2");
                     if (daysElapsed === harvestDay) messages.push("Harvest");
 
                     if (messages.length > 0) {
+                        const locExt = batch.rackName ? ` - ${batch.rackName}, Level ${batch.layer}` : "";
                         newReminders.push({
                             batch: batch.name,
-                            message: `Today is Day ${daysElapsed} – ${messages.join(' & ')}`
+                            message: `${messages.join(' & ')} today${locExt}`
                         });
                     }
                 }
