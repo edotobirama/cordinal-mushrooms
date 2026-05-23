@@ -158,6 +158,7 @@ export default function ProductionPage() {
                 const locs = await db.select({
                     batchId: schema.batchLocations.batchId,
                     rackName: schema.racks.name,
+                    layer: schema.batchLocations.layer,
                     quantity: schema.batchLocations.quantity
                 })
                     .from(schema.batchLocations)
@@ -168,7 +169,7 @@ export default function ProductionPage() {
                     if (!locMap.has(loc.batchId)) {
                         locMap.set(loc.batchId, []);
                     }
-                    locMap.get(loc.batchId)?.push(`${loc.rackName} (${loc.quantity})`);
+                    locMap.get(loc.batchId)?.push(`${loc.rackName} Level ${loc.layer} (${loc.quantity} jars)`);
                 }
             }
             setLocationMap(locMap);
@@ -273,7 +274,7 @@ export default function ProductionPage() {
                                     const multiLocs = locationMap.get(batch.id);
                                     const locationDisplay = multiLocs && multiLocs.length > 0
                                         ? multiLocs.join(", ")
-                                        : batch.rackName;
+                                        : (batch.rackName ? `${batch.rackName} Level ${batch.layer}` : "");
 
                                     return (
                                         <TableRow key={batch.id}>
