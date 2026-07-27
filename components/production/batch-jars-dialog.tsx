@@ -68,7 +68,7 @@ export function BatchJarsDialog({ batchId, batchName }: { batchId: number, batch
             formData.append("entityType", "jar");
             formData.append("entityId", jarId.toString());
 
-            const res = await fetch("/api/upload", {
+            const res = await fetch("/operations/api/upload", {
                 method: "POST",
                 body: formData,
             });
@@ -124,7 +124,7 @@ export function BatchJarsDialog({ batchId, batchName }: { batchId: number, batch
                                             <div className="flex gap-2 overflow-x-auto max-w-[300px] pb-2">
                                                 {photos[jar.id]?.length === 0 && <span className="text-muted-foreground text-xs">No photos</span>}
                                                 {photos[jar.id]?.map((p) => (
-                                                    <a key={p.id} href={`/api/media/${p.url}`} target="_blank" rel="noreferrer" className="flex flex-col items-center gap-1 group">
+                                                    <a key={p.id} href={`/operations/api/media/${p.url}`} target="_blank" rel="noreferrer" className="flex flex-col items-center gap-1 group">
                                                         <div className="w-12 h-12 rounded bg-muted flex items-center justify-center overflow-hidden border">
                                                             <ImageIcon className="w-6 h-6 text-muted-foreground" />
                                                             {/* In a real app we'd load a thumbnail, but for now we link to the presigned URL */}
