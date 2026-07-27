@@ -95,8 +95,11 @@ export function useProduction() {
 
     const getAvailableSourceJars = useCallback(async (type: string) => {
         if (!db) return [];
-        // If type is "Jars", we need "Liquid Culture" jars
-        const requiredBatchType = type === "Jars" ? "Liquid Culture" : null;
+        let requiredBatchType = null;
+        if (type === "Jars") requiredBatchType = "Liquid Culture";
+        else if (type === "Liquid Culture") requiredBatchType = "Base Culture";
+        else if (type === "Base Culture") requiredBatchType = "Jars";
+        
         if (!requiredBatchType) return [];
 
         const { batches, batchJars } = await import("@/lib/db/schema");
