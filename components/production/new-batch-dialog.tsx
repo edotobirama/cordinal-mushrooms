@@ -19,6 +19,8 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
+    SelectGroup,
+    SelectLabel
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { useProduction } from "@/hooks/use-production";
@@ -48,27 +50,18 @@ export function NewBatchDialog({ racks, onSuccess }: { racks: Rack[], onSuccess?
     const [jarSources, setJarSources] = useState<{ jarId: number; batchName: string; jarIndex: number; status: string }[]>([]);
 
     useEffect(() => {
-        // Determine required source type
-        // LC -> Base Culture
-        // Jars -> Liquid Culture
-        let requiredType = "";
-        if (selectedType === "Liquid Culture") requiredType = "Base Culture";
-        
-        // Reset selections
-        setSelectedSourceId("");
-        setSelectedSourceJarId("");
-        setSelectedSourceInventoryId("");
-
-        if (requiredType) {
-            getInventoryItemsByType(requiredType).then(items => {
+        if (selectedType === "Liquid Culture") {
+            getInventoryItemsByType("Base Culture").then(items => {
                 setInventorySources(items as any);
             });
             setJarSources([]);
         } else if (selectedType === "Jars") {
-            getAvailableSourceJars(selectedType).then(jars => {
+            getInventoryItemsByType("Liquid-Culture").then(items => {
+                setInventorySources(items as any);
+            });
+            getAvailableSourceJars("Jars").then(jars => {
                 setJarSources(jars as any);
             });
-            setInventorySources([]);
         } else {
             setInventorySources([]);
             setJarSources([]);
@@ -242,17 +235,44 @@ export function NewBatchDialog({ racks, onSuccess }: { racks: Rack[], onSuccess?
                             <div className="space-y-2">
                                 <Label htmlFor="sourceSelection">Exact Source</Label>
                                 {selectedType === "Jars" ? (
-                                    <Select required onValueChange={setSelectedSourceJarId}>
+                                    <Select required onValueChange={(val) => {
+                                        if (val === "New Source") {
+                                            setSelectedSourceJarId("");
+                                            setSelectedSourceInventoryId("");
+                                            setSelectedSourceId("New Source");
+                                        } else if (val.startsWith("jar-")) {
+                                            setSelectedSourceJarId(val.replace("jar-", ""));
+                                            setSelectedSourceInventoryId("");
+                                            setSelectedSourceId("");
+                                        } else if (val.startsWith("inv-")) {
+                                            setSelectedSourceInventoryId(val.replace("inv-", ""));
+                                            setSelectedSourceJarId("");
+                                            setSelectedSourceId("");
+                                        }
+                                    }}>
                                         <SelectTrigger className="bg-background">
-                                            <SelectValue placeholder="Select Source Jar" />
+                                            <SelectValue placeholder="Select Source Jar or LC Inventory" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="none">New / External Source</SelectItem>
-                                            {jarSources.map(jar => (
-                                                <SelectItem key={jar.jarId} value={jar.jarId.toString()}>
-                                                    {jar.batchName} - Jar {jar.jarIndex} ({jar.status})
-                                                </SelectItem>
-                                            ))}
+                                            <SelectItem value="New Source">New / External Source</SelectItem>
+                                            
+                                            <SelectGroup>
+                                                <SelectLabel>Active Jars</SelectLabel>
+                                                {jarSources.map(jar => (
+                                                    <SelectItem key={`jar-${jar.jarId}`} value={`jar-${jar.jarId}`}>
+                                                        {jar.batchName} - Jar {jar.jarIndex} ({jar.status})
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectGroup>
+                                            
+                                            <SelectGroup>
+                                                <SelectLabel>Stored Liquid Culture (Inventory)</SelectLabel>
+                                                {inventorySources.map(item => (
+                                                    <SelectItem key={`inv-${item.id}`} value={`inv-${item.id}`}>
+                                                        {item.name} ({item.quantity} {item.unit})
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectGroup>
                                         </SelectContent>
                                     </Select>
                                 ) : (
