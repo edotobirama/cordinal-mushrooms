@@ -124,13 +124,35 @@ export function BatchJarsDialog({ batchId, batchName }: { batchId: number, batch
                                             <div className="flex gap-2 overflow-x-auto max-w-[300px] pb-2">
                                                 {photos[jar.id]?.length === 0 && <span className="text-muted-foreground text-xs">No photos</span>}
                                                 {photos[jar.id]?.map((p) => (
-                                                    <a key={p.id} href={`/operations/api/media/${p.url}`} target="_blank" rel="noreferrer" className="flex flex-col items-center gap-1 group">
-                                                        <div className="w-12 h-12 rounded bg-muted flex items-center justify-center overflow-hidden border">
-                                                            <ImageIcon className="w-6 h-6 text-muted-foreground" />
-                                                            {/* In a real app we'd load a thumbnail, but for now we link to the presigned URL */}
-                                                        </div>
-                                                        <span className="text-[10px] text-muted-foreground">{format(new Date(p.createdAt), 'MMM d')}</span>
-                                                    </a>
+                                                    <div key={p.id} className="relative flex flex-col items-center gap-1 group">
+                                                        <a href={`/operations/api/media/${p.url}`} target="_blank" rel="noreferrer" className="flex flex-col items-center gap-1 group">
+                                                            <div className="w-12 h-12 rounded bg-muted flex items-center justify-center overflow-hidden border">
+                                                                <ImageIcon className="w-6 h-6 text-muted-foreground" />
+                                                            </div>
+                                                            <span className="text-[10px] text-muted-foreground">{format(new Date(p.createdAt), 'MMM d')}</span>
+                                                        </a>
+                                                        <button 
+                                                            onClick={async () => {
+                                                                if (!confirm("Are you sure you want to delete this photo?")) return;
+                                                                try {
+                                                                    const res = await fetch(`/operations/api/media/${p.url}`, {
+                                                                        method: "DELETE"
+                                                                    });
+                                                                    if (!res.ok) throw new Error("Failed to delete photo");
+                                                                    setPhotos(prev => ({
+                                                                        ...prev,
+                                                                        [jar.id]: prev[jar.id].filter(photo => photo.id !== p.id)
+                                                                    }));
+                                                                } catch (e: any) {
+                                                                    alert(e.message);
+                                                                }
+                                                            }}
+                                                            className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                                            title="Delete photo"
+                                                        >
+                                                            &times;
+                                                        </button>
+                                                    </div>
                                                 ))}
                                             </div>
                                         </TableCell>
