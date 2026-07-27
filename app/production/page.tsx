@@ -7,6 +7,7 @@ import * as schema from "@/lib/db/schema";
 import { NewBatchDialog } from "@/components/production/new-batch-dialog";
 import { ProductionActions } from "@/components/production/production-actions";
 import { BatchHistoryDialog } from "@/components/production/batch-history-dialog";
+import { BatchJarsDialog } from "@/components/production/batch-jars-dialog";
 import { NotesDialog } from "@/components/production/notes-dialog";
 import {
     Table,
@@ -293,6 +294,7 @@ export default function ProductionPage() {
                                             <TableCell className="text-muted-foreground text-sm flex items-center justify-between gap-2">
                                                 <span>{nextAction}</span>
                                                 <div className="flex items-center gap-1">
+                                                    <BatchJarsDialog batchId={batch.id} batchName={batch.name} />
                                                     <BatchHistoryDialog batchId={batch.id} batchName={batch.name} sourceId={batch.sourceId} startDate={batch.startDate} />
                                                     <ProductionActions batchId={batch.id} batchName={batch.name} onSuccess={refreshData} />
                                                 </div>

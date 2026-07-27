@@ -160,11 +160,22 @@ export default function Home() {
   return (
     <div className="space-y-8 pb-12">
       {/* Page header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Real-time status for incubation and storage rooms.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Real-time status for incubation and storage rooms.
+          </p>
+        </div>
+        <button 
+          onClick={() => {
+            document.cookie = "staff_auth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            window.location.href = "/operations/login";
+          }}
+          className="px-4 py-2 bg-zinc-900 border border-zinc-800 text-sm font-medium rounded-md hover:bg-zinc-800 transition-colors"
+        >
+          Logout
+        </button>
       </div>
 
       {/* ── FRUITING / INCUBATION ROOM ── */}

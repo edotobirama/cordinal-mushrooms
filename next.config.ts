@@ -1,16 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig = {
-  output: 'export',
+  basePath: '/operations',
   images: {
     unoptimized: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
   },
   typescript: {
     ignoreBuildErrors: true,
   },
+  serverExternalPackages: ['better-sqlite3'],
 };
 
 export default nextConfig;

@@ -14,8 +14,10 @@ export async function startBatchService(db: any, params: {
     providedLayer: number;
     notes?: string | null;
     motherCultureSource?: string;
+    sourceJarId?: number;
+    sourceInventoryId?: number;
 }) {
-    let { name: providedName, type, sourceId, startDate, rackId, jarCount, locationsStr, providedLayer, notes, motherCultureSource } = params;
+    let { name: providedName, type, sourceId, startDate, rackId, jarCount, locationsStr, providedLayer, notes, motherCultureSource, sourceJarId, sourceInventoryId } = params;
 
     if (!sourceId || sourceId === "undefined" || sourceId === "null") {
         sourceId = "New Source";
@@ -74,11 +76,24 @@ export async function startBatchService(db: any, params: {
         stage: "Incubation",
         status: "Active",
         notes: notes || null,
-        motherCultureSource: motherCultureSource || "New"
+        motherCultureSource: motherCultureSource || "New",
+        sourceJarId: sourceJarId || null,
+        sourceInventoryId: sourceInventoryId || (sourceItem ? sourceItem.id : null)
     }).returning({ id: schema.batches.id });
 
     const batchId = result[0]?.id;
     if (!batchId) throw new Error("Failed to create batch");
+
+    // --- Create Individual Jars ---
+    if (jarCount > 0) {
+        const jarValues = Array.from({ length: jarCount }).map((_, i) => ({
+            batchId,
+            jarIndex: i + 1,
+            status: "Active"
+        }));
+        await db.insert(schema.batchJars).values(jarValues);
+    }
+    // ------------------------------
 
     if (locationsStr) {
         const locations = JSON.parse(locationsStr) as { rackId: number; layer: number; quantity: number }[];
@@ -145,6 +160,11 @@ export async function harvestBatchService(db: any, batchId: number) {
     ).limit(1);
     const existingItem = existingItemRes[0];
 
+    // Mark all active jars in this batch as Harvested
+    await db.update(schema.batchJars)
+        .set({ status: "Harvested" })
+        .where(and(eq(schema.batchJars.batchId, batchId), eq(schema.batchJars.status, "Active")));
+
     if (existingItem) {
         await db.update(schema.inventoryItems)
             .set({ quantity: sql`${schema.inventoryItems.quantity} + ${finalQuantity}`, notes: batch.notes || existingItem.notes || null })
@@ -188,6 +208,11 @@ export async function discardBatchService(db: any, batchId: number) {
     await db.update(schema.batches)
         .set({ status: "Discarded", stage: "Discarded", updatedAt: new Date().toISOString() })
         .where(eq(schema.batches.id, batchId));
+
+    // Mark all active jars in this batch as Discarded
+    await db.update(schema.batchJars)
+        .set({ status: "Discarded" })
+        .where(and(eq(schema.batchJars.batchId, batchId), eq(schema.batchJars.status, "Active")));
 
     const locations = await db.select().from(schema.batchLocations).where(eq(schema.batchLocations.batchId, batchId));
 

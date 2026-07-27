@@ -93,5 +93,33 @@ export function useProduction() {
         await saveDatabase();
     }, [db]);
 
-    return { startBatch, updateBatch, updateBatchNotes, harvestBatch, discardBatch, deleteBatch, logBatchAction, discardPartialBatch };
+    const getAvailableSourceJars = useCallback(async (type: string) => {
+        if (!db) return [];
+        // If type is "Jars", we need "Liquid Culture" jars
+        const requiredBatchType = type === "Jars" ? "Liquid Culture" : null;
+        if (!requiredBatchType) return [];
+
+        const { batches, batchJars } = await import("@/lib/db/schema");
+        const { eq, and, not } = await import("drizzle-orm");
+
+        const result = await db.select({
+            jarId: batchJars.id,
+            batchName: batches.name,
+            jarIndex: batchJars.jarIndex,
+            status: batchJars.status
+        })
+        .from(batchJars)
+        .leftJoin(batches, eq(batchJars.batchId, batches.id))
+        .where(
+            and(
+                eq(batches.type, requiredBatchType),
+                not(eq(batchJars.status, "Discarded"))
+            )
+        )
+        .orderBy(batches.name, batchJars.jarIndex);
+
+        return result;
+    }, [db]);
+
+    return { startBatch, updateBatch, updateBatchNotes, harvestBatch, discardBatch, deleteBatch, logBatchAction, discardPartialBatch, getAvailableSourceJars };
 }

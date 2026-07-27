@@ -41,6 +41,7 @@ export default function RootLayout({
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
+          themes={['light', 'dark', 'nature', 'cordyceps', 'midnight']}
         >
           <DbProvider>
             <div className="flex h-screen w-full flex-col md:flex-row bg-background">

@@ -36,7 +36,9 @@ export const racks = sqliteTable("racks", {
 export const batches = sqliteTable("batches", {
     id: integer("id").primaryKey({ autoIncrement: true }),
     name: text("name").notNull(), // e.g., 'Batch-2023-10-27-001'
-    sourceId: text("source_id").notNull(), // LC ID
+    sourceId: text("source_id").notNull(), // LC ID (Text string fallback)
+    sourceJarId: integer("source_jar_id"), // Reference to a specific jar
+    sourceInventoryId: integer("source_inventory_id"), // Reference to harvested inventory
     startDate: text("start_date").notNull(), // ISO Date String
     rackId: integer("rack_id")
         .references(() => racks.id)
@@ -102,7 +104,8 @@ export const inventoryItems = sqliteTable("inventory_items", {
     type: text("type").notNull(), // 'Dried-Sealed', 'Dried-Capsule', 'Liquid-Culture', 'Waste'
     quantity: integer("quantity").notNull(),
     unit: text("unit").notNull(), // 'grams', 'pieces', 'jars'
-    batchId: integer("batch_id"), // Optional reference
+    batchId: integer("batch_id"), // Optional reference to batch
+    sourceJarId: integer("source_jar_id"), // Optional reference to exact jar
     isPreserved: integer("is_preserved", { mode: "boolean" }).notNull().default(false),
     notes: text("notes"),
     createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`).notNull(),
@@ -154,4 +157,26 @@ export const containers = sqliteTable("containers", {
     updatedAt: text("updated_at")
         .default(sql`(CURRENT_TIMESTAMP)`)
         .notNull(),
+});
+
+export const batchJars = sqliteTable("batch_jars", {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    batchId: integer("batch_id")
+        .references(() => batches.id, { onDelete: 'cascade' })
+        .notNull(),
+    jarIndex: integer("jar_index").notNull(),
+    status: text("status").notNull().default("Active"), // 'Active', 'Harvested', 'Contaminated', 'Discarded'
+    yieldGrams: real("yield_grams"),
+    notes: text("notes"),
+    createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`).notNull(),
+    updatedAt: text("updated_at").default(sql`(CURRENT_TIMESTAMP)`).notNull(),
+});
+
+export const photos = sqliteTable("photos", {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    entityType: text("entity_type").notNull(), // 'jar', 'batch', 'inventory'
+    entityId: integer("entity_id").notNull(),
+    url: text("url").notNull(),
+    notes: text("notes"),
+    createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`).notNull(),
 });

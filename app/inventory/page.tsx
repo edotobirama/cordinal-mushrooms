@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, Package, Loader2, Search } from "lucide-react";
 import { AddItemDialog } from "@/components/inventory/add-item-dialog";
 import { InventoryActions } from "@/components/inventory/inventory-actions";
+import { BatchJarsDialog } from "@/components/production/batch-jars-dialog";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 
@@ -225,7 +226,12 @@ export default function InventoryPage() {
                                     <TableCell>{item.sourceName || "—"}</TableCell>
                                     <TableCell>{safeDate(item.createdAt) ? format(safeDate(item.createdAt)!, 'PPP') : "—"}</TableCell>
                                     <TableCell>
-                                        <InventoryActions itemId={item.id} itemName={item.name} itemType={item.type} currentQuantity={item.quantity} onSuccess={refreshData} />
+                                        <div className="flex items-center gap-2">
+                                            {item.batchId && (
+                                                <BatchJarsDialog batchId={item.batchId} batchName={`Trace: ${item.name}`} />
+                                            )}
+                                            <InventoryActions itemId={item.id} itemName={item.name} itemType={item.type} currentQuantity={item.quantity} onSuccess={refreshData} />
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))}
