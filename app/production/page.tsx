@@ -9,6 +9,7 @@ import { ProductionActions } from "@/components/production/production-actions";
 import { BatchHistoryDialog } from "@/components/production/batch-history-dialog";
 import { BatchJarsDialog } from "@/components/production/batch-jars-dialog";
 import { NotesDialog } from "@/components/production/notes-dialog";
+import { InventoryPhotoDialog } from "@/components/inventory/inventory-photo-dialog";
 import {
     Table,
     TableBody,
@@ -372,19 +373,22 @@ export default function ProductionPage() {
                                             />
                                         </TableCell>
                                         <TableCell>
-                                            {item.batchId && item.batchStartDate ? (
-                                                <div className="flex items-center gap-1">
-                                                    <BatchJarsDialog batchId={item.batchId} batchName={item.name} />
-                                                    <BatchHistoryDialog
-                                                        batchId={item.batchId}
-                                                        batchName={item.name}
-                                                        sourceId={item.sourceName || ""}
-                                                        startDate={item.batchStartDate}
-                                                    />
-                                                </div>
-                                            ) : (
-                                                <span className="text-xs text-muted-foreground">—</span>
-                                            )}
+                                            <div className="flex items-center gap-1">
+                                                <InventoryPhotoDialog itemId={item.id} itemName={item.name} />
+                                                {item.batchId && item.batchStartDate ? (
+                                                    <>
+                                                        <BatchJarsDialog batchId={item.batchId} batchName={item.name} />
+                                                        <BatchHistoryDialog
+                                                            batchId={item.batchId}
+                                                            batchName={item.name}
+                                                            sourceId={item.sourceName || ""}
+                                                            startDate={item.batchStartDate}
+                                                        />
+                                                    </>
+                                                ) : (
+                                                    <span className="text-xs text-muted-foreground ml-2">—</span>
+                                                )}
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ))}
@@ -511,6 +515,7 @@ export default function ProductionPage() {
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center justify-end gap-1">
+                                                    <InventoryPhotoDialog itemId={item.id} itemName={item.name} />
                                                     {item.batchId && item.batchStartDate && (
                                                         <>
                                                             <BatchJarsDialog batchId={item.batchId} batchName={item.name} />

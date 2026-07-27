@@ -18,6 +18,7 @@ import { Activity, Package, Loader2, Search } from "lucide-react";
 import { AddItemDialog } from "@/components/inventory/add-item-dialog";
 import { InventoryActions } from "@/components/inventory/inventory-actions";
 import { BatchJarsDialog } from "@/components/production/batch-jars-dialog";
+import { InventoryPhotoDialog } from "@/components/inventory/inventory-photo-dialog";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 
@@ -226,10 +227,11 @@ export default function InventoryPage() {
                                     <TableCell>{item.sourceName || "—"}</TableCell>
                                     <TableCell>{safeDate(item.createdAt) ? format(safeDate(item.createdAt)!, 'PPP') : "—"}</TableCell>
                                     <TableCell>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-1">
                                             {item.batchId && (
                                                 <BatchJarsDialog batchId={item.batchId} batchName={`Trace: ${item.name}`} />
                                             )}
+                                            <InventoryPhotoDialog itemId={item.id} itemName={item.name} />
                                             <InventoryActions itemId={item.id} itemName={item.name} itemType={item.type} currentQuantity={item.quantity} onSuccess={refreshData} />
                                         </div>
                                     </TableCell>
