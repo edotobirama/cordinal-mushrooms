@@ -373,12 +373,15 @@ export default function ProductionPage() {
                                         </TableCell>
                                         <TableCell>
                                             {item.batchId && item.batchStartDate ? (
-                                                <BatchHistoryDialog
-                                                    batchId={item.batchId}
-                                                    batchName={item.name}
-                                                    sourceId={item.sourceName || ""}
-                                                    startDate={item.batchStartDate}
-                                                />
+                                                <div className="flex items-center gap-1">
+                                                    <BatchJarsDialog batchId={item.batchId} batchName={item.name} />
+                                                    <BatchHistoryDialog
+                                                        batchId={item.batchId}
+                                                        batchName={item.name}
+                                                        sourceId={item.sourceName || ""}
+                                                        startDate={item.batchStartDate}
+                                                    />
+                                                </div>
                                             ) : (
                                                 <span className="text-xs text-muted-foreground">—</span>
                                             )}
@@ -439,6 +442,7 @@ export default function ProductionPage() {
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center justify-end gap-1">
+                                                <BatchJarsDialog batchId={batch.id} batchName={batch.name} />
                                                 <BatchHistoryDialog batchId={batch.id} batchName={batch.name} sourceId={batch.sourceId} startDate={batch.startDate} />
                                                 <Button
                                                     variant="ghost"
@@ -508,12 +512,15 @@ export default function ProductionPage() {
                                             <TableCell>
                                                 <div className="flex items-center justify-end gap-1">
                                                     {item.batchId && item.batchStartDate && (
-                                                        <BatchHistoryDialog
-                                                            batchId={item.batchId}
-                                                            batchName={item.name}
-                                                            sourceId={item.sourceName || ""}
-                                                            startDate={item.batchStartDate}
-                                                        />
+                                                        <>
+                                                            <BatchJarsDialog batchId={item.batchId} batchName={item.name} />
+                                                            <BatchHistoryDialog
+                                                                batchId={item.batchId}
+                                                                batchName={item.name}
+                                                                sourceId={item.sourceName || ""}
+                                                                startDate={item.batchStartDate}
+                                                            />
+                                                        </>
                                                     )}
                                                     <Button
                                                         variant="ghost"
